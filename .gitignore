@@ -36,9 +36,18 @@ config.status
 make.rules
 make.sys
 configure
+peg_*
+cfitsio/cfitsio.pc
+
 
 cfitsio/config.status
 cfitsio/config.log
 cfitsio/Makefile
 
 configure
+
+bin/*
+src/*
+!src/*.f90
+src/peg_config.f*
+
