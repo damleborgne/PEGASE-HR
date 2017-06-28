@@ -46,12 +46,14 @@ INSTALLATION PROCEDURE
      >  make
      The executables are then located in the bin/ directory.
 
-  3) Test installation
+  3) Remember to run "unlimit" under linux to avoid memory issues
+
+  4) Test installation
      You can test the installation by running 
      > make test
      This  will take a few minutes on a standard 1-1.5 GHz PC processor)
 
-  4) Use PEGASE-HR
+  5) Use PEGASE-HR
      The programs of PEGASE-HR can be executed from any directory, they
      read input files from the current directory and data files from
      the installation directory, and produce output files

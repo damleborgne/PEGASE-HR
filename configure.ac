@@ -94,10 +94,10 @@ try_f90flags="\$(FFLAGS)"
 #ldflags="$myopts"
 
 ##################################################
-#-> ld: O2=perfect, O4 is slower !
-myopts="-O4 -fopenmp -Wl,-stack_size,0x10000000000"
-try_fflags="$myopts"
-ldflags="-O4 -fopenmp -Wl,-stack_size,0x10000000000"
+case "${ARCHBIN}" in
+*-darwin*) myopts="-O4 -fopenmp -Wl,-stack_size,0x10000000000" try_fflags="$myopts" ldflags="-O4 -fopenmp -Wl,-stack_size,0x10000000000" ;;
+*-linux*)  myopts="-O4 -fopenmp" try_fflags="$myopts" ldflags="-O4 -fopenmp" ;;
+esac
 ##################################################
 
 if test "$fflags" = ""   ; then fflags=$try_fflags     ; fi

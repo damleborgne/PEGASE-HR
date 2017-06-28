@@ -69,7 +69,7 @@ SSPs_HR : ../make.sys peg_config.f90 SSPs_HR.f90 SSPs_HR.o
 	$(LD) -o $@ SSPs_HR.o SSPsubr.o constants.o types_SSPs.o util.o $(MODULES) $(LDFLAGS)
 	- ( cp $@ ../bin/${ARCHBIN}/ )
 scenarios_HR : ../make.sys peg_config.f90 scenarios_HR.f90 scenarios_HR.o 
-	$(LD) -o $@ scenarios_HR.o constants.o util.o types_ssps.o $(MODULES) $(LDFLAGS)
+	$(LD) -o $@ scenarios_HR.o constants.o util.o types_SSPs.o $(MODULES) $(LDFLAGS)
 	- ( cp $@ ../bin/${ARCHBIN}/ )
 spectra_HR : ../make.sys peg_config.f90 spectra_HR.f90 spectra_HR.o 
 	$(LD) -o $@ spectra_HR.o compute_scenario.o pegase_func.o fits_spec_io.o constants.o data_io.o nrtype.o scenario_io.o ssp_io.o stellib_io.o types.o util.o $(MODULES) $(LDFLAGS)

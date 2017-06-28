@@ -27,8 +27,9 @@ clean :
 	-rm -rf bin/*
 
 veryclean : clean
-	@ rm -f src/peg_config.f90 make.rules make.sys config.log config.status peg_cshrc peg_bashrc 
+	@ rm -f src/peg_config.f90 make.rules make.sys config.log config.status peg_cshrc peg_bashrc configure
 	@ rm -rf bin/*
 	@ find . -name "*~" -exec rm "{}" \;
 	@ find . -name "#*" -exec rm "{}" \;
+
 
