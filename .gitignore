@@ -37,12 +37,12 @@ make.rules
 make.sys
 configure
 peg_*
+
 cfitsio/cfitsio.pc
-
-
 cfitsio/config.status
 cfitsio/config.log
 cfitsio/Makefile
+
 
 configure
 
