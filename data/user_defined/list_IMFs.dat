@@ -1,0 +1,14 @@
+!! list_IMFs.dat. This file is part of the PEGASE-HR package
+!!   lines prefixed by ! and blank lines are ignored
+!!   If you define new IMF (see documentation) you must add the
+!!   corresponding filename at the end of this file
+IMF_Kennicutt.dat
+IMF_Kroupa.dat
+IMF_MillerScalo.dat
+IMF_Salpeter.dat
+IMF_Scalo86.dat
+IMF_Scalo98.dat
+IMF_topheavy.dat
+IMF_BaldryGlazebrook.dat
+IMF_Kroupa01.dat
+!!-- END ---------------------------------------------------------------------

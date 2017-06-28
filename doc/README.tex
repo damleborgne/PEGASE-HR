@@ -1,0 +1,521 @@
+\documentclass[11pt,fleqn]{article}
+\usepackage[dvips]{graphicx}
+\usepackage[dvips]{epsfig}
+\newcommand{\ang}{\textrm{\scriptsize \AA}}
+\newcommand{\SFR}{\textit{SFR}}
+\textheight=23cm
+\textwidth=17.5cm
+\voffset=-1cm
+\hoffset=-2.5cm
+\setlength{\parindent}{0cm}
+\setlength{\parskip}{0.1cm}
+\begin{document}
+\thispagestyle{empty}
+\begin{center}
+\vfill
+\unitlength=1mm
+\begin{picture}(50,50)
+\put(5,5){\makebox(0,0){\Huge $\star$}}
+\put(5,45){\makebox(0,0){\Huge $\star$}}
+\put(45,45){\makebox(0,0){\Huge $\star$}}
+\put(45,5){\makebox(0,0){\Huge $\star$}}
+\put(25,25){\makebox(0,0){\Huge{\textsc{P\'egase - HR}}}}
+\end{picture}
+\vfill
+\Large{\textbf{P}rojet d'\textbf{\'E}tude des \textbf{GA}laxies par
+\textbf{S}ynth\`ese \textbf{\'E}volutive - \textbf{H}aute 
+\textbf{R}\'esolution}
+
+\large{\emph{Version 1.1: January 19, 2005}}\\
+\vfill
+\large{Damien \textsc{Le Borgne} --- Michel \textsc{Fioc} --- Brigitte \textsc{Rocca-$\!$Volmerange}}\\
+\large{Philippe \textsc{Prugniel} --- Ariane \textsc{Lan\c{c}on} --- Caroline \textsc{Soubiran}}\\
+
+\vfill
+\large
+\begin{tabular}{ll}
+\multicolumn{2}{l}{Institut d'astrophysique de Paris}\\
+\multicolumn{2}{l}{98 bis boulevard Arago, 75014 Paris, France}\\
+\\
+\multicolumn{2}{l}{E-mail: \texttt{leborgne@iap.fr}, \texttt{fioc@iap.fr}}\\
+\\
+\multicolumn{2}{l}{WWW: \texttt{http://www.iap.fr/pegase/}}\\
+\\
+\end{tabular}
+\vfill
+\end{center}
+\newpage
+\tableofcontents
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+P\'EGASE-HR (presented in Le Borgne et al. 2004) is a code aimed at
+computing synthetic evolutionary optical spectra of galaxies with a very
+high resolution (R=10 000, or $\delta \lambda=0.55$ \AA{}) over the
+wavelength range $\lambda = [4000, 6800]$~\AA{}.  It's the result of
+combining the code P\'EGASE.2 with the high-resolution stellar library
+\'ELODIE.\\ This code can also be used at low resolution ($R \simeq
+200$) over the range covered by the BaSeL library (from far UV to the
+near IR), and then produces the same results as P\'EGASE.2.\\
+
+
+The P\'EGASE.2 code (Version 2 of P\'EGASE, Projet d'Etude des GAlaxies
+par Synthese Evolutive in French) is aimed at modeling the spectral
+evolution of galaxies. P\'EGASE.2 is presented in Fioc \&
+Rocca-Volmerange (1997) and the
+code is fully described in a README file (Fioc \& Rocca-Volmerange 2000) 
+(\texttt{ftp://ftp.iap.fr/pub/from\_users/pegase/PEGASE.2/}, also available in the \texttt{doc/} directory of this package).
+P\'EGASE.2 uses the BaSeL (Lejeune et al. 1997,1998) library of stellar
+spectra and can therefore synthesize low-resolution (with a resolution $R \simeq 200$, from 91~\AA{} to 160~$\mu$m)
+ultraviolet to near-infrared spectra of Hubble sequence galaxies as
+well as of starbursts.\\
+
+In P\'EGASE-HR, the BaSeL library can be replaced by a grid of spectra
+interpolated from the high-resolution \'ELODIE library of stellar spectra.\\
+
+The \'ELODIE library is a stellar database of 1959 spectra for 1503
+stars, observed with the echelle spectrograph \'ELODIE on the 193 cm
+telescope at the Observatoire de Haute Provence. Previous versions of
+the library are presented in Prugniel \& Soubiran (2001) and Soubiran
+et al. (1998); Katz et al. (1998).  It has been updated for the
+present work by doubling the number of spectra, which greatly improved
+the coverage of the parameter space (in effective temperature, surface
+gravity, and metallicity).
+
+The data reduction has also been improved, in particular the flux
+calibration, and the wavelength range has been extended to
+400-680~nm.  For the purpose of population synthesis, the
+original resolution R=42\,000 has been reduced to R=10\,000 at
+lambda=550~nm, or more precisely to a gaussian instrumental
+profile of FWHM$\simeq 0.55$~\AA{} over the whole range of
+wavelengths.  The typical signal-to-noise (S/N) ratio of the
+spectra is 500/\AA{}. The HR diagram coverage with the estimated
+stellar parameters is extensive (see Le Borgne et al. 2004 for
+details).
+
+The up-to-date version of the library of stellar spectra is
+available at\\
+\texttt{http://www.obs.u-bordeaux1.fr/public/astro/CSO/elodie\_library.html}
+where fully reduced spectra, as well as the estimated stellar
+parameters, are provided.
+
+From this library, a grid of stellar spectra with regularly
+spaced stellar parameters (the grid has the same underlying
+shape as the Lejeune et al. grid) was created by
+interpolation. This grid (\texttt{stellibELODIE.fits}),
+available at \texttt{http://www.iap.fr/pegase/}, 
+is used by P\'EGASE-HR to compute  synthetic spectra.
+
+
+This document describes the installation procedure, the main changes
+between PEGASE.2 and PEGASE-HR's algorithms and output formats, and a
+simplified description of the steps one should follow to compute high
+resolution synthetic spectra.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Installation}
+\subsection{Structure of the package}
+Before the installation, the package contains the following files:
+\begin{verbatim}
+  ./configure
+  ./src/                        ! Source code
+  ./doc/                        ! Documentation
+  ./data/                       ! Data files
+     ./data/tracks/                 -> stellar tracks
+     ./data/stellibs/               -> stellar libraries
+                                       (stellibLCBcor.fits and stellibELODIE.fits)
+     ./data/external/               -> various data files
+     ./data/tests/                  -> files used to test the installation
+     ./data/user_defined/           -> data files that can be modified by 
+                                       the user: ages.dat, IMFs, etc.
+     ./data/isochrones/             -> pre-computed isochrones (with SSPs_HR.f)
+
+\end{verbatim}
+
+If the \'ELODIE library \texttt{data/stellibs/stellibELODIE.fits} is not
+in the package, you should download it from
+\texttt{http://www.iap.fr/pegase/} and copy it into the directory
+\texttt{data/stellibs/}. Warning: the size of this file is 150~Mo.
+
+After the installation, the additionnal directories should be present:
+\begin{verbatim}
+  ./bin/                        ! Binary files
+  ./lib/                        ! Binary libraries
+\end{verbatim}
+\subsection{Basic installation}
+The compilation and installation is made by the standard linux commands:
+\begin{verbatim}
+      > ./configure
+      > make
+\end{verbatim}
+Then:
+\begin{verbatim}
+      > source peg_cshrc       (if your shell is csh or tcsh)
+    OR
+      > . peg_bashrc           (if your shell is bash)
+\end{verbatim}
+
+
+Details of the installation:
+\begin{itemize}
+\item{\bf configure} : \texttt{./configure} generates the file
+        Makefile.  The presence of the required \texttt{cfitsio}
+        library is checked during this process. If this library is not
+        installed on your computer, you can download it from
+        \texttt{http://heasarc.gsfc.nasa.gov/docs/software/fitsio/fitsio.html}
+        and install it. If the library is installed but not found,
+        please use the argument ``\texttt{--with-libraries=}'' in your
+        call to \texttt{./configure} to specify the path where the
+        library can be found.\\ Example: \texttt{> ./configure
+        --with-libraries=/usr/lib/}
+
+\item{\bf make} : \texttt{make} uses the information in
+\texttt{Makefile} to compile the various parts of the P\'EGASE-HR
+code. \\ The following binary files are built:
+\begin{itemize}
+\item{\texttt{bin/SSPs\_HR}}
+\item{\texttt{bin/scenarios\_HR}}
+\item{\texttt{bin/spectra\_HR}}
+\item{\texttt{bin/lick}}
+\item{\texttt{bin/fitstodat}}
+\end{itemize}
+
+
+\item{Setting up the PATH variable}: Depending on the shell you use, 
+you can use the scripts peg\_bashrc and
+peg\_cshrc which are created in the ``\texttt{make}'' process. These
+scripts add the \texttt{bin/} directory to the environment variable
+\texttt{PATH}.
+
+\end{itemize}
+
+\subsection{Test of the installation}
+Once the package is installed, and once you have downloaded the \'ELODIE
+grid \texttt{stellibELODIE.fits} and copied it into the
+\texttt{data/stellib/} directory, you can test the results of your
+\texttt{spectra\_HR} compiled code by running
+\begin{verbatim}
+   > make test
+\end{verbatim}
+This will compute three scenarios and measure Lick indices on a high
+resolution spectrum, in the
+temporary directory \texttt{test\_tmp}. Then it will print the result of the
+comparison of pre-computed spectra (stored in \texttt{data/tests/})
+with the spectra computed on your machine.
+
+
+\subsection{Organization of the files}
+Unlike P\'EGASE.2, it is not required to run the P\'EGASE-HR codes
+from the directory containing the data files.  During the
+installation, the codes are compiled in such a way that the data files
+are always read in the \texttt{data/} directory.
+
+The \texttt{data/} directory is divided into several sub-directories
+(see the \texttt{data/README} file for more details).  The commonly
+used data files that the user can modify are in the
+\texttt{data/user\_defined} directory. The most important files that
+can be modified (but should not be deleted) are:
+\begin{verbatim}
+ages.dat            ! list of the output ages for the spectra (in Myr)
+filters.dat         ! definition of the filters' transmission curves
+index_table.dat     ! definition of the Lick indices
+list_IMFs.dat       ! list of the IMFs to choose from (when using SSPs_HR)
+list_tracks.dat     ! list of the stellar tracks to use (when calling SSPs_HR)
+list_stellibs.dat   ! list of the stellar libraries to use 
+                                             (used by SSPs_HR and spectra_HR)
+\end{verbatim}
+
+
+\subsection{System requirements}
+\begin{itemize}
+\item{Memory} :
+To run the code \texttt{spectra\_HR}, you need at least 200 Mo of memory.
+If necessary, you might want to loosen the system limits by running the following commands:
+\begin{verbatim}
+     > unlimit
+     > limit coredumpsize 0
+\end{verbatim}
+\item{Disk space} : you will need a minimum of 70 Mo of space disk for
+package. This does not include the \'ELODIE stellar library
+(\texttt{stellibELODIE.fits}) which, alone, is 150 Mo large.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Differences between P\'EGASE.2 and P\'EGASE-HR}
+
+This section will be useful to users already familiar with P\'EGASE.2, and may be skipped by others readers.
+
+\subsection{Stellar libraries}
+
+P\'EGASE-HR is designed to run with a variety of stellar spectral libraries,
+and two libraries are provided within the distributed package. The use of a FITS
+format for these libraries speeds up access to the data considerably compared to
+the previous ASCII format of P\'EGASE.2. 
+
+% (peut-etre plutot dans la section pour tous ?)
+The header keyword {\sc grid\_typ} defines the grid for which stellar 
+spectra are available (a grid point is characterized by its effective temperature,
+surface gravity and metallicity). {\sc grid\_typ} takes
+the value {\sc standard} for the library of Lejeune et al. 1998, in the format
+adopted for P\'EGASE.2 (\texttt{stellibLCBcor.fits}). It also takes the value {\sc standard}
+for any other library provided on the same grid. \\
+The \'ELODIE grid (\texttt{stellibELODIE.fits}) contains fewer spectra than the BaSeL one (Lejeune et
+al. 1998). For this grid, {\sc grid\_typ} takes the value {\sc truncated}.
+The output of {\texttt{SSPs\_HR}} will be identical for all stellar libraries that have 
+the same parameter grid (and thus the same {\sc grid\_typ}). 
+
+
+\subsection{Algorithms}
+
+Although the program sources have been reorganized, most algorithms of P\'EGASE-HR
+are identical to those of P\'EGASE.2. The sequence of programs to run in order 
+to produce a database of single stellar populations, define a star formation
+scenario, and compute the corresponding galaxy spectrum, is also unchanged. 
+
+\begin{center}
+\begin{tabular}{ll}
+P\'EGASE.2 & P\'EGASE-HR \\ \hline 
+SSPs.f & SSPs\_HR.f \\
+scenarios.f & scenarios\_HR.f \\
+spectra.f & spectra\_HR.f \\ \hline
+\end{tabular}
+\end{center}
+
+When used with the low resolution stellar
+library BaSeL (stellibLCBcor),  P\'EGASE-HR produces the same synthetic spectra as
+P\'EGASE.2, though in a different format (cf. Sect.\,\ref{FITSout.sec}).
+
+
+
+The \'ELODIE library being less extended (in metallicity, effective
+temperature and surface gravity) than the BaSeL library, the algorithm
+of \texttt{SSP\_HR.f} had to be modified from P\'EGASE.2's version.  In
+\texttt{SSPs.f}, the interpolation of the stellar spectra made use of
+the spectra with metallicities immediately greater and smaller than
+the metallicity of the tracks. In \texttt{SSPs\_HR.f}, when no spectra
+with metallicities close to the metallicity of the tracks are
+available in the \'ELODIE stellar library, some spectra with
+metallicities larger or smaller are used in the interpolation.
+
+
+A new code (\texttt{lick.f}) can be used to measure some Lick indices
+on the evolutionary spectra (see Sect.~\ref{lick.sec} for details.)
+
+
+\subsection{Changes in SSPs files and scenarios files}
+The use of stellar libraries with different grids makes it necessary to
+secure the use of SSPs files and of stellar libraries. This is done by
+the keyword {\sc grid\_typ}, as described above.
+
+The files \texttt{{\it prefix}\_SSPs.dat} now contain a header
+specifying the type and the name of the grid used to compute the
+isochrones. This header is produced automatically by the code
+\texttt{SSPs\_HR}.  
+The individual isochrone files
+(e.g. \texttt{{\it prefix}\_tracksZ0.02.dat}) now also
+contain in their header an additionnal line specifying the type of the
+grid used.
+
+The code \texttt{scenarios\_HR} now adds a third line in the header of
+the scenario files, with the name of the stellar library that will be
+used to compute the synthetic spectra.
+
+The code \texttt{spectra\_HR} then checks the compatibility between the
+grid used to compute the isochrones (the files
+\texttt{prefix\_SSP\_tracks*.dat}) and the grid defined in the scenario,
+used to compute the synthetic spectrum.
+
+\subsection{FITS outputs}
+\label{FITSout.sec}
+To reduce the size of the output files, and to increase the speed of
+the access to the models, the outputs of the code \texttt{spectra\_HR}
+are now in binary FITS format.
+
+The structure of the output FITS files is described here. The FITS
+files are made of several blocks (or extensions, or HDU for Header
+Data Units).
+\begin{itemize}
+  \item the primary extension contains, in a binary table, the
+  evolutionary spectra. The first dimension is the number of wavelengths;
+  the second dimension is the number of timesteps (hereafter
+  \texttt{ntimes}). {\bf The spectra are still normalized to one solar 
+    mass of galaxy, but they are now in units of L$_\odot$.\AA{}$^{-1}$}
+  (with L$_\odot = 3.826 \times 10^{33}$~erg.s$^{-1}$), instead of erg.s$^{-1}$.\AA{}$^{-1}$ in P\'EGASE.2.
+  \item the extension \texttt{ETS\_LINES} contains the emission
+  lines computed for a typical H{\sc ii} region, following the prescriptions used in P\'EGASE.2. 
+  It has 2 columns and 61 rows (61 being the number of emission
+  lines computed). The first column contains the wavelengths of the
+  lines. The second column contains, at each row, \texttt{ntimes}
+  values, i.e. the evolution of the flux for each emission line.
+  \item the extension \texttt{ETS\_PARA} contains the evolution of all the
+  parameters for the galaxy (masses, metallicities, extinction, rates
+  of supernovae Ia and II, number of Lyman photons, etc.) as described
+  in P\'EGASE.2's README file.
+  \item the extension \texttt{ETS\_CONT\_WCA}, if present, contains a
+  vector of the wavelengths for which the synthetic spectra are
+  given. This extension is omitted if the wavelength scale is linearly regular
+  (which is the case for the \'ELODIE library). In this case, the
+  wavelength scale is fully described in the header of the primary
+  extension by the reference wavelength (keyword \texttt{CRVAL1}) and
+  the wavelength step (keyword \texttt{CDELT1}).
+  \item the extension \texttt{ETS\_LICK}, if present, contains the
+  values of the Lick indices (as defined in the file\\
+  \texttt{data/user\_defined/index\_table.dat}) measured on the
+  synthetic evolutionary spectra. The first dimension of the binary table
+  is the number of indices; the second dimension is the number of
+  timesteps. This extension is added to the FITS file by the code
+  \texttt{lick.f}.
+\end{itemize}
+
+The code \texttt{fitstodat} included in the package makes it possible
+to convert a P\'EGASE-HR FITS output file to an ASCII file, in the same
+format as P\'EGASE.2's outputs. This code can be useful for people used
+to P\'EGASE.2's outputs and who do not want to change the reading format
+of their own routines. However, we stress that the ASCII files for
+P\'EGASE-HR outputs are about ten times as large as P\'EGASE.2's output
+files (i.e. approximately 10~Mo, depending on the number of
+timesteps).  Note also that the information on Lick indices, if
+present, is lost during the conversion.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Usage of P\'EGASE-HR}
+Computing spectra with P\'EGASE-HR is very similar to the way to do it
+with P\'EGASE.2. If you are not familiar with P\'EGASE.2, we advise you
+strongly to read the P\'EGASE.2's  README file (included in the
+\texttt{doc/} directory). We describe here the simple steps one should
+follow to compute a synthetic spectrum with P\'EGASE-HR.
+\subsection{Computing isochrones: SSPs\_HR.f}
+The first step is to compute isochrones for various metallicities.
+Run 
+\begin{verbatim}
+    > SSPs_HR
+\end{verbatim}
+and make your choices of IMF, model for SNe ejecta, stellar winds, and
+stellar library. P\'EGASE.2's README file describes the way to add
+other IMFs.
+
+The stellar libraries available by default are:
+\begin{itemize}
+\item \texttt{stellibLCB.fits}    : Lejeune et al. (1998) low-resolution stellar library
+\item \texttt{stellibELODIE.fits} : \'ELODIE (high-resolution) stellar library interpolated onto a
+  regular grid of stellar parameters.
+\end{itemize}
+
+A file (\texttt{prefix\_SSPs.dat}) is then created, and contains the
+list of the isochrone files for every metallicities. The isochrone
+files (\texttt{prefix\_tracksZ0.0001.dat}
+\ldots \texttt{prefix\_tracksZ0.1.dat}) are also created in the current
+directory.
+
+The metallicities of the isochrones computed with the \'ELODIE library
+can, in principle, be the same as the metallicities of the P\'EGASE.2
+isochrones. However, the small number of stars with extreme
+metallicities in this library makes the isochrones with very low or
+very large metallicities more uncertain.
+
+\subsection{Describing scenarios of evolution: scenarios\_HR.f}
+You can now define one or several scenarii of evolution, from the simplest (single
+instantaneous burst) to the most complex (with infall, galactic winds,
+continuous star formation, evolution of the metallicity, etc.).
+Run 
+\begin{verbatim}
+    > scenarios_HR
+\end{verbatim}
+and choose 
+\begin{itemize}
+\item the name of the text file created by this code (the scenario
+  itself)
+\item the name of the file containing the list of isochrones
+  (\texttt{prefix\_SSPs.dat}). A default name is given, and corresponds
+  to a set of isochrones computed with a Salpeter IMF, stellar winds,
+  and the \'ELODIE library. In the next step (\texttt{spectra\_HR}),
+  the isochrones will be read automatically  in the same directory as
+  \texttt{prefix\_SSPs.dat}.
+
+\item the fraction of sub-stellar objects
+\item the stellar library you want to use. {\bf Warning: the stellar
+  library should be the same as the one used to create
+  \texttt{prefix\_SSPs.dat}. If it is not the case,  an
+  error will appear in the next step
+  (\texttt{spectra\_HR})  and no  synthetic spectrum will be computed.}
+\item for each scenario of evolution, the parameters of star
+  formation, as described in details in P\'EGASE.2's README.
+\end{itemize}
+
+
+\subsection{Computing synthetic spectra: spectra\_HR.f}
+Once a scenario is defined (and stored in a text file, for example
+ \texttt{myscenario.scn}),
+ run \texttt{spectra\_HR}  to compute the evolutionary synthetic  spectra:
+\begin{verbatim}
+    > spectra_HR myscenario.scn
+\end{verbatim}
+If you omit the command-line argument (here, \texttt{myscenario.scn}), you will be
+asked for the name of the file describing the scenarios.
+
+One or several output files (in FITS format, with the structure
+described in section \ref{FITSout.sec}) are then created. If these files
+already exist, the program will abort, issuing an error message.
+
+{\bf Important notice:} if a file \texttt{ages.dat} is present in the current
+directory, then the output spectra are computed for the timesteps
+listed in this particular file, overriding the default \texttt{ages.dat} (located in the
+P\'EGASE-HR directory \texttt{data/user\_defined/}). In this case, a warning is given
+during the execution of \texttt{spectra\_HR}.
+
+\subsection{Measuring Lick indices on high-resolution synthetic spectra}
+\label{lick.sec}
+Once high-resolution evolutionary spectra are computed, one can measure
+the classic Lick indices by running for example
+\begin{verbatim}
+    > lick myspectrum.fits 5.
+\end{verbatim}
+The first argument is the evolutionary synthetic spectrum; the second
+argument is the FWHM of the emission lines.  In the example above, the
+predicted emission lines (contained in the extension
+\texttt{ETS\_LINES} of the FITS file) are added to the spectrum, with
+FWHM=5~\AA{} for each line, before measuring the indices. The emission
+lines are computed as in P\'EGASE.2 for a mean H{\sc ii} region,
+consistently with the ionizing flux of the massive stars.
+
+If one doesn't want to include the emission lines in the measurement, they should set FWHM=0
+(by running \texttt{lick spectrum 0.}).
+
+If \texttt{lick} is called without any command-line argument, then the user
+is prompted for the filename and the FWHM.
+
+\subsection{Measuring colors on low-resolution synthetic spectra}
+When low resolution synthetic spectra are computed with P\'EGASE-HR, one
+can measure the colors on these spectra, just like in P\'EGASE.2. 
+The code to measure the colors is \texttt{colors\_HR}. It differs from
+the P\'EGASE.2's \texttt{color} code only by the input format of the
+data (FITS format instead of ASCII format).
+
+Run for example:
+\begin{verbatim}
+    > colors_HR myspectrum.fits
+\end{verbatim}
+to generate an ASCII file containing the evolution of many colors.
+
+\texttt{colors\_HR} makes use of the files
+\texttt{data/user\_defined/filters.dat} and
+\texttt{data/user\_defined/calib.dat}.
+This \texttt{calib.dat} file is created automatically by the initial
+\texttt{make} command, with the code \texttt{bin/calib\_HR} and from 
+the \texttt{filters.dat} file (see
+P\'EGASE.2's README for the details of this calibration).
+
+
+
+\section{References}
+\begin{itemize}
+\itemindent=-0.5cm
+ \item[] Fioc M., Rocca-$\!$Volmerange B., 1997, A\&A 326, 950
+ \item[] Fioc M., Rocca-$\!$Volmerange B., 2000, \texttt{astro-ph}/9912179
+ (P\'EGASE.2's README)
+\item[] Katz D., Soubiran C., Cayrel R., Adda, M., Cautain R., 1998, A\&A,338,151
+ \item[] Le Borgne D.,  Rocca-Volmerange B., Prugniel Ph., Lan\c{c}on A., Fioc M., Soubiran C., 2004, A\&A in press, astro-ph/0408xxx
+\item[] Prugniel Ph., Soubiran C., 2001, A\&A,369,1048
+\item[] Soubiran C., Katz D., Cayrel R., 1998, A\&AS,133,221
+\end{itemize}
+\end{document}

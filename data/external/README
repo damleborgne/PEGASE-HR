@@ -1,0 +1,21 @@
+Package PEGASE-HR, copyright 2004, D. Le Borgne et al.
+
+This directory is part of the PEGASE-HR distribution, for more information
+consult the README on the parent directory
+
+===============================================================================
+
+FILES:
+
+BD+17o4708.dat - Spectrum of BD+17 4708 (Oke & Gunn 1983)
+King.dat - Radiative transfer in spherical geomety, King profile
+Spitzer.dat - Table 5.4 of Spizer (1978, p. 113)
+WW.dat - Stellar yields from Woosley & Weather (1995)
+slab.dat - Radiative transfer slab model (Fioc 1997)
+HII.dat - Used to compute nebular emission (continuum and lines)
+VegaLCB.dat - Spectrum of Vega (Lejeune et al. 1997 - Kurucz)
+SunLCB.dat - Spectrum of the Sun (Lejeune et al. 1997 - Kurucz)
+dust.dat - Extinction properties (Draine &Lee 1993; Laor & Draine 1993)
+stellibCM.dat - Stellar library of Clegg & Middlemass (1987)
+
+===============================================================================

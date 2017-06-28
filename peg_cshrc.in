@@ -1,0 +1,8 @@
+# This file is part of PEGASE-HR package
+# peg_cshrc is automatically created from peg_cshrc.in when running configure.
+# Definitions to add in the .cshrc file, if you use csh or tcsh to help
+# using PEGASE-HR.
+# Alternatively, you can execute this file as: source peg_cshrc
+#-----------------------------------------------------------------------------
+setenv PATH "${PATH}:@PEGASE_ROOT@/bin"
+#-----------------------------------------------------------------------------

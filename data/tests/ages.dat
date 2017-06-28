@@ -1,0 +1,83 @@
+!! ages.dat. This file is part of the PEGASE-HR package
+!!   lines prefixed by ! and blank lines are ignored
+!!   
+!!
+!! It contains the ages in Myr (one per line, integer) at which spectra
+!! are output. You may modify this sampling.
+!!
+!! The program spectra_HR first try to load the ages from the file
+!! ages.dat on the current directory, and if no such file exists, it
+!! uses the file PEG_ROOT/data/user_defined/ages.dat
+!!
+!! To customize this file, it is recommended to copy it on the 
+!! directory where the program spectra_HR will be run and edit this copy
+!! (keep the original file unchanged).
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+12
+14
+16
+18
+20
+25
+30
+35
+40
+45
+50
+60
+70
+80
+90
+100
+120
+140
+160
+180
+200
+250
+300
+350
+400
+450
+500
+600
+700
+800
+900
+1000
+1200
+1400
+1600
+1800
+2000
+2500
+3000
+3500
+4000
+4500
+5000
+6000
+7000
+8000
+9000
+10000
+11000
+12000
+13000
+14000
+15000
+16000
+17000
+18000
+19000
+20000
+!!-- END ---------------------------------------------------------------------

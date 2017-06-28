@@ -1,0 +1,21 @@
+Package PEGASE-HR, copyright 2004, D. Le Borgne et al.
+
+PEGASE-HR is portable of a wide range of Linux platform.
+It requires a Fortran f77 compiler and the cfitsio library.
+
+
+This directory is part of the PEGASE-HR distribution, for more information
+consult the README on the parent directory
+
+===============================================================================
+
+SUBDIRECTORIES:
+
+external  - Reference data used by the different programs
+stellibs  - Stellar libraries interpolated on grids
+tests  - Data used for running the regression tests after installation
+tracks  - Evolutionary tracks for various metallicities
+isochrones  - isochrones pre-computed (with SSPs_HR) with the Salpeter IMF.
+user_defined - Default setting for files that may be customized
+
+===============================================================================

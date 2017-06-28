@@ -1,0 +1,24 @@
+Package PEGASE-HR, copyright 2004, D. Le Borgne et al.
+
+This directory is part of the PEGASE-HR distribution, for more information
+consult the README on the parent directory
+
+===============================================================================
+
+FILES:
+
+ages.dat            - ages at which spectra are output
+list_IMFs.dat       - list of the IMFs to choose from in program SSPs_HR
+IMF_Kennicutt.dat   - IMF, Kennicutt (1983)
+IMF_Kroupa.dat      - IMF, Kroupa et al. (1993)
+IMF_MillerScalo.dat - IMF, Miller & Scalo (1979)
+IMF_Salpeter.dat    - IMF, Salpeter (1955)
+IMF_Scalo86.dat     - IMF, Scalo (1986)
+IMF_Scalo98.dat     - IMF, Scalo (1998)
+IMF_topheavy.dat    - INF, Top heavy
+index_table.dat     - definition of Lick indices
+list_stellib.dat    - list of stellar libraries to choose from
+list_tracks.dat     - list of stellar tracks to use in SSPs_HR
+filters.dat         - list of transmission curves and calibration of filters
+calib.dat           - calibration file, generated from filters.dat
+===============================================================================

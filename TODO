@@ -1,0 +1,287 @@
+
+
+################################################################################
+A FAIRE (Damien 20040706):
+################################################################################
+################################################################################
+- Dans fits_spec_io: mettre a jour l'information header du spectre de sortie
+   (eg. REFCODE','1997A&A...326..950F ...)
+
+################################################################################
+################################################################################
+FAIT (Damien 20040802):
+################################################################################
+################################################################################
+...........................................................................
+Decider de mettre les deux grilles (complete+tronquee) ou une seule
+(laquelle?) : la tronquee seulement.
+...........................................................................
+
+################################################################################
+################################################################################
+FAIT (Damien 26040722):
+################################################################################
+################################################################################
+.........................................................................
+Tests :
+  - do_tests.tcsh est un script qui genere des SSPs et des spectres dans 
+    le repertoire PEG_ROOT/test, et qui compare les resulats obstenus aux 
+    spectres pre-calcules qui se trouvent dans data/tests.
+    Tests : * SSPs_HR (genere 7 isochrones)
+            * spectra_HR (genere 2 spectres evolutifs avec stellibLCB, 
+                             et  1 spectre  evolutif avec  stellibELODIE)
+            * lick (mesure les indices de lick sur le spectre ELODIE calcule 
+                   ci-dessus)
+
+  - make_tests : script pour notre usage seulement : genere dans data/tests 
+    les spectres qui serviront de reference dans la release finale.
+
+  - do_tests.tcsh ajoute dans Makefile.in : "make tests"
+.........................................................................
+Les fichiers de SSPs sont lus dans le meme repertoire que le fichier ...._SSPs.dat
+.........................................................................
+
+################################################################################
+################################################################################
+FAIT (Damien 20040722):
+################################################################################
+################################################################################
+.........................................................................
+- Lick.f : choix d'inclure ou non les raies nebulaires
+
+.........................................................................
+Ariane:
+* Dans fits_spec_creat (dans fits_spec_io.f),  on ecrit pour
+ l'instant que l'unite est erg/s/0.1nm . Mais en fait on est
+ en LSUN/0.1nm maintenant :
+Remplacer :
+  call ftpkys(Lfits,'BUNIT','erg/s/0.1nm','Unit of data',istat)
+par :
+  call ftpkys(Lfits,'BUNIT','LSUN/0.1nm','Unit of data',istat)
+.........................................................................
+Ariane:
+ * La routine fits_spec_wavl_read (dans fits_spec_io.f) ne
+lisait pas nlines. Rajouter apres l'appel ftmnhd et le test sur istat :
+
+      call ftgkyj(Lfits, 'NAXIS2', nlines, comment, istat)
+      if (istat.ne.0) return
+
+(Remarque: cette routine n'est utilisee que par la version
+de colors.f qui travaille sur du fits. Je vais relire ce programme
+et vous le renvoyer, car on devrait le joindre au package.
+Ses sorties sont exactement dans le meme format qu'a l'epoque
+ou on n'utilisait pas les fits)
+
+Remarque de Damien : Maintenant, Lick.f utilise aussi cette routine.
+
+################################################################################
+################################################################################
+FAIT (Damien 20040708):
+################################################################################
+################################################################################
+...........................................................................
+- Nom du package: le nom PHR_77 n'est pas tres approprie. Il ne faut pas
+   utiliser le numero de version ELODIE, car ELODIE peut evoluer
+   independament du PEGASE_HR. Peut-on Utilser PEGASE_HR_0_9_3
+   (version actuelle?)
+
+ ==> PEGASE-HR c'est mal mal, non ?
+...........................................................................
+- Pour ELODIE on devrait mettre ELODIE_3 ou ELODIE.3 car il pourrait y avoir
+un ELODIE_4.
+
+==> deja fait avec GRID_TYP, non ?
+...........................................................................
+- J'ai mis la stellib de CM dans data/external
+
+################################################################################
+################################################################################
+FAIT (Philippe 20040707):
+################################################################################
+################################################################################
+
+- Le config.status n'est pas cree comme promis.
+    PHP-20040707: le fichier config.status est cree par le script configure
+        mais il est ensuite detruit ca on n'en a pas besoin.
+        J'ajoute un message disant que config.status est detruit.
+        Damien, en as tu besoin?
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+DLB : 
+	==> Non, c'est bon.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+...........................................................................
+
+- verifier dans spectra_HR que la bilbiotheque correspond a celle des SSPs.
+
+PhP-20040707: 
+ + Lit le nom de la library dans le scenario au lieu de dans SSPs.dat
+ + Nouveau kw dans la grille, GRID_TYP, identifie le type de grille,
+   'standard' pour un grille LCB classique. Autre chose dans les autres
+   cas, par exemple GRID_TYP='truncated ELODIE.3.77'
+ + stell_open retourne la valeur de grid_type
+ + ssp_files_read controle que grid_type lu dans la library correspond
+   a la valeur dans le fichier SSPs.dat (nouveau header, cf. ci-dessous)
+ + add a line grid type in the SSP file.
+
+Le keyword GRID_TYP identifie le type de grille. Le but et de savoir
+que l'on peut utiliser les meme fichiers SSPs avec LCB ou whole_ELODIE.
+
+Modification du Header de SSPs.dat. Le nouveau header est:
+
+  format: PEGASE-HR/SSPs   ! This file contains SSPs computed by PEGASE-HR
+  version: 1               ! Identify the version of the format of this file
+  grid_type: standard      ! standard=LCB type grid
+  head_end:
+  
+  Le header doit commencer par la carte 'format' et se termine par la carte
+  'end'. L'ordre des autres cartes est libre.
+
+
+modifs:
+ 1- stell_open retourne grid_type, value of the FITS keyword GRID_TYP to be
+      added to the file
+      (stell_create modified accordingly)
+ 2- scenario_header_r. Replace scenario_SSPs_r, return also the name
+       of the stellar library
+ 3- SSPs_HR.f. Write a header in the file SSPs.dat
+ 4- ssp_files_read (in ssp_io.f)
+    Read the header in SSPs and validate the value of grid_type
+ 5- read_para_stellib to return grid_type
+    (read_para_stellib is called in SSPs_HR.f just after choose_stellib, 
+     is it necessary to call it again after in the loop?)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+DLB : 
+ ==> Non, et j'ai meme deplace hors de la boucle la lecture de Clegg
+et Middlemass, ainsi que le calcul des quantites nprec et nspectot. 
+J'ai teste, ca ne pose pas de probleme, on retrouve nos bonnes vieilles SSPs.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ 6- Ajouter le keyword GRID_TYP dans le header des libraries
+
+reflexion:
+Le fichier SSPs.dat contient une liste de fichiers.
+Il me semble souhaitable a terme que tous les fichiers correspondants 
+soient groupes dans un meme fichier FITS (1 HDU par SSP) et description
+de l'ensemble des HDU dans le primary
+La structure des fichiers SSP est extremement fragile (complete 
+interdependance entre les pgm SSPs_HR et spectra_HR). On pourrait faire un 
+header plus flexible et autocontrole par un numero de version, mais je
+crois que le mieux est de convertir en FITS... Cela peut ne pas etre fait
+maintenant.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+DLB : 
+ Je ne suis pas trop pour : c'est pratique de pouvoir enlever a la
+main de SSPs.dat une ligne ou deux si on veut ne pas utilise une
+metallicite ou une autre. Avec les fits, ca va eter bcp plus dur... 
+De toute facon, ce n'est pas du totu la priorite, laissons ca pour le moment.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+todo:
+Il faudrait faire en sorte que les SSP soient lues dans le meme directory
+que SSPs.dat affin que l'on puisse ranger l'ensemble dans un meme sous
+repertoire qui puisse ne pas etre le current directory.
+
+Ca serait bien d'avoir des SSP standards disponibles dans la distribution
+(pour la grille standard, en particulier si on decide de ne distribuer
+que wholeELODIE). Avec une ou deux IMF et autres params bien choisis. 
+
+
+...........................................................................
+
+
+################################################################################
+################################################################################
+FAIT (Damien 20040706):
+################################################################################
+################################################################################
+
+(1) Dans le peg_cshrc.in : on redefinit le PATH, mais
+ca ne va pas jusqu'a bin/ 
+(je ne connais pas la synthaxe pour modifier dans peg_cshrc.in, 
+donc j'ai modifie a la main chez moi dans peg_chrc)
+
+ -> fait (DLB) dans peg_cshrc.in et dans peg_bashrc.in aussi
+.........................................................................
+
+- Peut-on inclure dans la distribution des fichiers SSP standards, afin
+de ne pas avoir forcement besoin de faire tourner SSPs_HR?
+    -> NON
+.........................................................................
+(2) Dans SSPsubr.f, routine read_para_stellib :
+stellibLCB a TGZ en nhdu=3, alors que 
+stellibELODIE l'a en nhdu=2. Pour eviter 
+tout pb, remplacer :
+
+*     Move to the 2nd header data unit (Z, Teff, g, etc.).
+         nhdu = 2
+         hdutype = 2
+         call ftmahd(unit, nhdu, hdutype, status)
+
+
+par :
+
+*     Move to header data unit 'TGZ' (results in NHDU=3 for LCB, 2 for ELO)
+         hdutype = 2
+         call ftmnhd(unit, hdutype, 'TGZ', 0, status)
+         if (status.ne.0) stop 'Couldnt find TGZ hdu number...'
+         call ftghdn(unit, nhdu)
+         write (*,*) 'nhdu for TGZ =', nhdu
+         call ftmahd(unit, nhdu, hdutype, status) 
+
+Avec ca, ca passe, on a bien nz=10 et status=0.
+Avec stellibELODIE SSPs_HR semble tourner correctement (version 
+stellibELODIE recuperee aujourd'hui; j'ai teste SANS Clegg & Middlemass).
+...........................................................................
+DLB : removed src/read_spec.f utilis\'e nulle part.
+...........................................................................
+(3) Dans SSPsubr.f, routine read_para_stellib: 
+  Lorsque j'utilise mon stellibLCB, je coince avec un STATUS= 302 a :
+
+*     Idem for grid density
+         call ftgcve(unit, 8, frow, felem, nspec, nullval,
+     $        tmp, anyf, status)
+!         coltemplate = 'grid density'
+         if (status.ne.0)  print*, 'STATUS=',status
+
+Le test a ete fait avec la version stellibLCB recuperee aujourd'hui sur
+le site de Philippe.
+
+Le header du hdu 'TGZ' de stellibLCB ne definit pas les parametres 
+suivants (bien definis dans le header de stellibELODIE):
+TTYPE7  = 'B-V     '           / label for field
+TFORM7  = '1E      '           / format of field
+TUNIT7  = 'mag     '           / Physical quantity
+TTYPE8  = 'Mgb     '           / label for field
+TFORM8  = '1E      '           / format of field
+TUNIT8  = 'mag     '           / Physical quantity
+TTYPE9  = 'grid density'       / label for field
+TFORM9  = '1E      '           / format of field
+TUNIT9  = '        '           / Physical quantity
+
+--> DLB : c'est normal : grid density est le parametre qui decrit la
+densite d'etoiles reelles aux alentours du chaque point de la
+grille. C'etait utilise pendant les tests, mais plus maintenant car la
+grille est tronquee a grid_dentity=0.3 avant l'utilisation de SSPs.f.
+J'ai enleve cette variable qui ne sert plus a rien. 
+Mgb ne peut pas etre defini pour stellibLCB : trop basse resolution
+pour les indices de Lick. 
+B-V pourrait l'etre, mais n'est pas utilise.
+
+...........................................................................
+- Enlever Choix Clegg&Middlemass
+ -> fait : 'oui' toujours.
+...........................................................................
+
+DLB : Lick.f : rendu compatible avec g77. Amelioration du calcul des
+indices (niveau tres fin) pour avoir prendre en compte les fractions
+de pixels.  J'ai verifie que les mesures sont bonnes (avec un code IDL
+qui fait la meme chose, je retrouve les memes valeurs).
+
+J'ai aussi rajoute Lick.f dans le Makefile.in
+
+...........................................................................
+

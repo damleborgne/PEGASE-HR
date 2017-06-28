@@ -1,0 +1,14 @@
+HISTORY for PEGASE-HR
+
+Version 1.0, 22/08/2004: Initial version
+Version 1.1, 19/01/2005: Bug fixes
+  - D4000 break in colors_HR.f90: 'area' is set to 1.0 when typecalib=0
+    Before this fix, D4000 was too low by 13 percents.
+  - The default value for the initial metallicity of the gas is
+    changed from 0 to 0.02 in scenarios_HR.f, to avoid a problem with
+    zero metallicity stars at high spectral resolution.
+Version 1.2, 01/08/2008: Bug fixes
+  - filenames longer than 80 character are now possible.
+  - in fitstodat.f: didn't compile on some systems because of a missing argument (anyf) in call to ftgpve in routine rw_spoectra_flux.
+Version 1.3, 15/02/2011: Bug fixes
+  - in spectra_HR.f : i912=0 instead of 0 (should not affect most calculations)
