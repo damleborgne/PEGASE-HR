@@ -23,7 +23,7 @@
       integer nused,nprec(nmaxZl),iz,nz,nspectot
       integer iz1,iz2,iz3,iz4,iz5,iz6,iz7,iz8
       integer iused(nmaxZl*nmaxsl),nr,nmu,nCM
-      integer lun               ! Used for logical unit numbers
+      integer lun,luntrack               ! Used for logical unit numbers
 *     Double precision is required for post-AGB stars.
       double precision TCM(nmaxCM),gCM(nmaxCM),NHICM(nmaxCM)
       double precision NHeICM(nmaxCM),NHeIICM(nmaxCM)
@@ -319,11 +319,12 @@
       write(lun, '(a)') 'head_end:'
 
 ***** Loop on the SSP files
-      do itracks=1,ntracksfiles
+      do itracks=1,ntracksfiles         
          write(*,*) ' Computing isochones # ',itracks,'/',ntracksfiles
          whole_filename=PEG_ROOT//'data/tracks/'//filetracks(itracks)
-         open(10,status='old',file=whole_filename)
-         read(10,*) nMS,nHeF,nHB,nVLM,metal,mSNII
+         call file_unit(luntrack)
+         open(luntrack,status='old',file=whole_filename)
+         read(luntrack,*) nMS,nHeF,nHB,nVLM,metal,mSNII
 *     nVLM: number of tracks of very low mass stars (~<=0.5 Msol) 
 *     which do not evolve.
 *     nHeF: number of tracks (ZAMS->tip of the RGB) 
@@ -332,14 +333,14 @@
 *     nMS: number of ZAMS tracks.
 *     nHB: number of ZAHB tracks.
          do i=1,nMS
-            read(10,*) mass(i),nsteps(i),Mc(i),massfinal(i),nWD(i),rZ(i)
+            read(luntrack,*) mass(i),nsteps(i),Mc(i),massfinal(i),nWD(i),rZ(i)
             do j=1,nsteps(i)+nWD(i)*21
-               read(10,*) Lum(i,j),Teff(i,j),grav(i,j),age(i,j)
+               read(luntrack,*) Lum(i,j),Teff(i,j),grav(i,j),age(i,j)
             end do
             m(i)=log10(mass(i))     
          end do
          do i=nMS+1,nMS+nHB-1
-            read(10,*) massHB(i),nsteps(i),Mc(i),massfinal(i),
+            read(luntrack,*) massHB(i),nsteps(i),Mc(i),massfinal(i),
      $           nWD(i),rZ(i)
             j=nVLM
             do while ((massfinal(j)-massHB(i))
@@ -356,14 +357,14 @@
      $           /(m(j+1)-m(j))
             lifetime(i)=10.**lifetime(i)
             do j=1,nsteps(i)+nWD(i)*21
-               read(10,*) Lum(i,j),Teff(i,j),grav(i,j),age(i,j)
+               read(luntrack,*) Lum(i,j),Teff(i,j),grav(i,j),age(i,j)
             end do
          end do
          
          i=nMS+nHB
-         read(10,*) massHB(i),nsteps(i),Mc(i),massfinal(i),nWD(i),rZ(i)
+         read(luntrack,*) massHB(i),nsteps(i),Mc(i),massfinal(i),nWD(i),rZ(i)
          do j=1,nsteps(i)+nWD(i)*21
-            read(10,*) Lum(i,j),Teff(i,j),grav(i,j),age(i,j)
+            read(luntrack,*) Lum(i,j),Teff(i,j),grav(i,j),age(i,j)
             lifetime(i)=age(nVLM+nHeF,nsteps(nVLM+nHeF))
          end do
          mass(i)=mass(nVLM+nHeF)

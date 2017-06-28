@@ -49,6 +49,13 @@ Therefore, it will not be possible to install compiled files...
 ])
 fi
 
+# remove the default -g -02 FFLAGS because of annoying DSYM directories on Mac
+if test -z $FFLAGS; then
+    FFLAGS='-O4'
+fi
+#or
+#: ${FFLAGS=""} 
+
 #----------------------------------------------------------------------------
 # Fortran 77 compiler
 

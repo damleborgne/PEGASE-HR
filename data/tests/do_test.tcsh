@@ -86,7 +86,9 @@ else
   cat test.log  
   echo --------------
   echo Please make sure that you have downloaded the file stellibELODIE.fits
-  echo    and that it is now in the data/stellibs/ directory.
+  echo and that it is now in the data/stellibs/ directory.
+  echo Otherwise, download it from http://www2.iap.fr/pegase/pegasehr/package/stellibELODIE_3.1.fits 
+  echo and put it in the data/stellibs/ directory.   
   if ($noexit != 1) then
      exit
   endif

@@ -61,21 +61,21 @@ LIBPEGASE=${LIBDIR}/libpegase.a
 all:  Makefile ${BINDIR} ${LIBDIR} ${LIBPEGASE} ${APPLIC} calib
 
 calib: data/user_defined/filters.dat
-	@ cd data/user_defined/; ../../bin/calib_HR
+	cd data/user_defined/; ../../bin/calib_HR
 
 ${APPLIC}: ${SRCAPP} ${LIBPEGASE} 
-	@ ${RM} -f $@;\
+	${RM} -f $@;\
 	${F77} ${FFLAGS} ${SRC}/${@F}.f ${LIBRARIES} \
 	${INCL} -o ${BINDIR}/${@F} ||\
 	echo "PEGASE.HR: failed to install: ${EXEC}${@F}"
 
 ${LIBPEGASE}:  ${SRCSUB} ${SRC}/peg_config.f ${SRC}/peg_include.f 
-	 @ ${F77} ${FFLAGS} -c ${SRCSUB} ${INCL} && ar -csr ${LIBPEGASE} *.o &&\
+	 ${F77} ${FFLAGS} -c ${SRCSUB} ${INCL} && ar -csr ${LIBPEGASE} *.o &&\
 	 ${RM} -f *.o 
 
 
 .f:$<
-	@ ${F77} ${FFLAGS} $<  ${LIBRARIES} ${INCL} -o  $@ ||\
+	${F77} ${FFLAGS} $<  ${LIBRARIES} ${INCL} -o  $@ ||\
 	echo "PEGASE: failed to install: ${EXEC}${@F}"
 
 # The file peg_config defines the variable PEG_ROOT
@@ -114,16 +114,15 @@ pegasehr_devel.tar.gz: INSTALL README VERSION TODO configure* *.in src/ data/ do
 clean:
 	@ find . -name \*~ -exec rm -f "{}" \;
 	@ find . -name core -exec rm -f "{}" \;
-	@ rm -f bin/*
+	@ rm -rf bin/*
 	@ rm -f lib/*
 	@ rm -rf test_tmp
 
-dsitclean:
-	clean
-	@ rm -rf autom4te*
-	@ rm -f configure.scan
-	@ rm -f Makefile
-	@ cd cfitsio; make distclean
+distclean: clean
+	rm -rf autom4te*
+	rm -f configure.scan
+	rm -f Makefile
+	cd cfitsio; make distclean
 
 
 test:   all

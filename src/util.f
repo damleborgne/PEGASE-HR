@@ -167,7 +167,7 @@ CDOC ...................................................................
 c	  
       ope=.true.
 c
-      lun=lun-1
+c      lun=lun-1
       if(lun.gt.100)lun=0
       do while(lun.lt.100.and.ope)
          lun=lun+1

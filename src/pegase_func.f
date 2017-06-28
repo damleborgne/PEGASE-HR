@@ -1202,20 +1202,22 @@ c     local variables:
       nhdu = 1
       status=0
       call ftmahd(Lfits, nhdu, hdutype, status)
-
+      LunCM = 55
+      call file_unit(LunCM)
       do i=1,ntotused
          ispec=itotused(i)
          if (ispec.lt.0) then 
 *     CM library. We should never enter here with the ELODIE library !
+            call file_unit(LunCM)
             call file_open(PEG_ROOT//'data/external/stellibCM.dat',
      $           LunCM,istat)
-            read(10,*) nCM
+            read(LunCM,*) nCM
             do ii=1,nCM
-               read(10,'(a)') a         
+               read(LunCM,'(a)') a         
             enddo
-            read(10,*) (lambdaCM(k),k=1,nlambda)
+            read(LunCM,*) (lambdaCM(k),k=1,nlambda)
             do ii=1,-ispec
-               read(10,*) (flux_stel(k),k=1,nlambda)
+               read(LunCM,*) (flux_stel(k),k=1,nlambda)
             end do
             close(LunCM)
 
