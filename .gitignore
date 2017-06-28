@@ -35,9 +35,10 @@ config.log
 config.status
 make.rules
 make.sys
-#cfitsio/config.status
-#cfitsio/config.log
-#Makefile
-#cfitsio/Makefile
+configure
+
+cfitsio/config.status
+cfitsio/config.log
+cfitsio/Makefile
 
 configure

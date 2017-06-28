@@ -1,0 +1,9 @@
+# @configure_input@
+
+#.SUFFIXES : .f90 .o
+
+#.f90.o:
+#	@f90rule@
+
+%.o : %.f90
+	@f90rule@

@@ -27,18 +27,16 @@ INSTALLATION PROCEDURE
   1) Configuration
 
      Run:
-
+     > autoconf
+     > cd src ; moduledep.sh > .dependencies; cd ..
      > ./configure
-
-     The package requires a f77 compiler. If none is available, you
-     will have first to install one. Check for example g77 which
-     can be installed on a wide range of platforms.
+     > make
 
      The package requires the cfitsio library. If it is not installed
      in a standard location you may indicate the path to this library 
      in the configure option --with libraries, as eg.:
 
-     > ./configure --with-libraries=/data1/pleinpot/lib/
+     > ./configure --with-libraries=/mypath_to_cfitsio/lib/
 
      If cfitsio is not available on the current machine, you have
      to install it before intalling PEGASE-HR

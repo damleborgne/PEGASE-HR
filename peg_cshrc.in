@@ -4,5 +4,6 @@
 # using PEGASE-HR.
 # Alternatively, you can execute this file as: source peg_cshrc
 #-----------------------------------------------------------------------------
-setenv PATH "${PATH}:@PEGASE_ROOT@/bin"
+setenv PATH "${PATH}:@PEG_ROOT@/bin/@ARCHBIN@"
+setenv PEG_ROOT "@PEG_ROOT@"
 #-----------------------------------------------------------------------------

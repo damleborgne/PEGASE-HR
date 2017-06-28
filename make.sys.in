@@ -1,0 +1,18 @@
+# @configure_input@
+DFLAGS         = @dflags@
+FDFLAGS        = @fdflags@
+IFLAGS         = -I.
+F77            = @f77@
+F90            = @f90@
+FFLAGS         = @fflags@ $(IFLAGS)
+F77FLAGS       = $(FFLAGS)
+F90FLAGS       = @f90flags@ @pre_fdflags@$(FDFLAGS)
+F77FLAGS_NOOPT = @fflags_noopt@
+LD             = @ld@
+LDFLAGS        = @ldflags@  $(LIBS)
+LIBS           = @libs@
+AR             = @ar@
+ARFLAGS        = @arflags@
+RANLIB         = @ranlib@
+PEG_ROOT       = @PEG_ROOT@
+ARCHBIN        = @ARCHBIN@
