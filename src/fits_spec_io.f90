@@ -627,7 +627,7 @@ CONTAINS
     integer Lfits
     integer nw
     real(dp),dimension(:),intent(out) ::  lambda
-    real,dimension(nmaxlambda) ::  lambda_real
+    !real,dimension(nmaxlambda) ::  lambda_real
     integer istat
 
     integer       hdutype
@@ -660,7 +660,8 @@ CONTAINS
        if(istat.ne.0) return
 
        do k=1,nw
-          lambda_real(k)=cv + (k-cr) * cd
+          !lambda_real(k)=cv + (k-cr) * cd
+          lambda(k)=cv + (k-cr) * cd
        enddo
 
     else
@@ -683,16 +684,11 @@ CONTAINS
        enddo
        istat=0
        call ftmnhd(Lfits, 2, keyval, 0, istat)
-       !    print*, 'istat=',istat
+
        if(istat.ne.0) return
        call ftgcno(Lfits,0,'BFIT',k,istat)
-       !    print*, 'istat=',istat
-       call ftgcvd(Lfits,k,1,1,nw,-999.d0,lambda_real,anynulls,istat)
-       !    print*, 'istat=',istat
+       call ftgcvd(Lfits,k,1,1,nw,-999.d0,lambda,anynulls,istat)
     endif
-
-
-    lambda=1d0*lambda_real
 
     return
   end subroutine fits_spec_wave_read
@@ -703,6 +699,7 @@ CONTAINS
 
     integer,intent(in)  :: Lfits
     integer,intent(out)  :: nlines
+    integer :: nlines_read
     real(dp),DIMENSION(:), INTENT(out) ::  lambdaline
     integer istat,a
     character(len=240) :: comment
@@ -716,33 +713,20 @@ CONTAINS
     istat=0
     keyword = 'ETS_LINES'
     call ftmnhd(Lfits, 2, keyword, 0, istat)
-    !write(*,*) 'istat=',istat
     if (istat.ne.0) return
 
-    !write (*,*) 'hello, nlines?', nlines
-    !nlines = 0
     comment = ' '
-    keyword = 'naxis2'
-    call ftgkyj(Lfits, keyword, nlines, comment, istat)   ! BUGS HERE !!!!!
-    !write(*,*) 'istat=',istat,comment,nlines
-    if (istat.eq.0) then
-      !write(*,*) ''
-      a=2
-    else
-      return
-    endif
+    keyword = 'NAXIS2'
+    call ftgkyj(Lfits, keyword, nlines_read, comment, istat)   ! BUGS HERE !!!!!
+    nlines = nlines_read
+    if (istat.ne.0) return
 
     keyword = 'WAVE'
-
     call ftgcno(Lfits,0,keyword,ncol,istat)
-    !write(*,*) 'istat=',istat
-    !write(*,*) keyword
-    call ftgcvd(Lfits, ncol, 1, 1, nlines, -999.d0, lambdaline_real,&
-         anynulls, istat)
-    !write(*,*) 'istat=',istat
 
-    lambdaline=1d0*lambdaline_real
+    call ftgcvd(Lfits, ncol, 1, 1, nlines, -999.d0, lambdaline, anynulls, istat)
 
+    !lambdaline=1d0*lambdaline_real
 
     return
   end subroutine fits_spec_wavl_read
@@ -777,7 +761,7 @@ CONTAINS
 
     integer, intent(in) ::  Lfits, nlines, itime
     real(dp),DIMENSION(:)  :: fluxline
-    real(dp) :: one_real !! BUGFIX : NEEDS TO BE DP !!!  
+    real(dp) :: one_real 
  
     integer istat
 
@@ -961,7 +945,7 @@ CONTAINS
     real(dp),dimension(:)  :: licktab
     logical                :: anynulls
     logical,dimension(nmaxotimes) :: flagvals
-    real,dimension(nmaxotimes)    :: lickcol
+    real(dp),dimension(nmaxotimes)    :: lickcol
 
     nlick=0
 

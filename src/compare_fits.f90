@@ -45,14 +45,12 @@ program compare_fits
 
 
   !     open and reads nlambda,ntimes
-  call fits_spec_open_rw(nom_spec1,&
-       Lfits1,nlambda1,nlines1,ntimes1,istat)
+  call fits_spec_open_rw(nom_spec1, Lfits1,nlambda1,nlines1,ntimes1,istat)
   if (istat.ne.0) then
      write(*,*) 'ERROR reading input file : istat=',istat
      stop
   endif
-  call fits_spec_open_rw(nom_spec2,&
-       Lfits2,nlambda2,nlines2,ntimes2,istat)
+  call fits_spec_open_rw(nom_spec2, Lfits2,nlambda2,nlines2,ntimes2,istat)
   if (istat.ne.0) then
      write(*,*) 'ERROR reading input file : istat=',istat
      stop

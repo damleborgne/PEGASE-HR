@@ -87,7 +87,7 @@ program lick
            write(*,*) ' New HDU created (ETS_LICK)'
 
            do j=1,ntimes
-              print*, 'timestep = ',j,'/',ntimes
+              !print*, 'timestep = ',j,'/',ntimes
               !print*, Lfits, j, nlambda, nlines
               call read_spectra_fits_lick(Lfits,j,Lambda,nlambda,Flux,& 
                                Lambdalines,nlines,Fluxlines)   ! used to  HERE because of one_real not being dp!!!!!
@@ -97,7 +97,7 @@ program lick
               do k=1,nlambda
                  Fluxout(k)=Flux(k)
               enddo
-              print*, 'FWHM=',FWHM
+
               if (FWHM.gt.3.*delta) then
                  call addlines(nlambda,Lambda,Flux,nlines,&
                                      Lambdalines,&
@@ -114,15 +114,11 @@ program lick
               endif
 
               call reduce_res_lick(Lambda,nlambda,Fluxout,Flux_res)
-              !print*, Lambda(1:nlambda)
-              !print*, Flux_res(1:nlambda)
-              !write(*,*) 'nindex=',nindex
-              print*, 'FWHM=',FWHM
+
               do k=1,nindex
                  error=0
                  call Lickindex(Lambda,nlambda,Flux_res,&
                                      nom_ind,k,uniindice,unitindex,unindex,error)
-                 print*, unindex
                  iindices(k)=uniindice
                  indicesunits(k)=unitindex
                  if (error.ne.0) then
@@ -137,7 +133,6 @@ program lick
                     lesindex(k)=unindex
                  endif
               enddo
-              print*, 'FWHM=',FWHM
               call fits_lick_w(Lfits,j,ntimes,lesindex,&
                                iindices,indicesunits,nindex,FWHM)
            enddo
@@ -280,12 +275,11 @@ subroutine fits_lick_w(Lfits,itime,ntimes,indices,iindices,&
   character(len=16) ::   tform(nmaxlick)
   character(len=16) ::   tunit(nmaxlick)
   double precision  ::  indices(nmaxlick)
-  real ::          unindice
   character(len=*) :: iindices(nmaxlick)
   integer       indicesunits(nmaxlick)
   real(DP) :: FWHM
 
-  print*, 'FWHM in', FWHM
+
   istat=0
   !     move to the HDU called ETS_LICK
   call ftmnhd(Lfits, 2, 'ETS_LICK', 0, istat) 
@@ -311,11 +305,11 @@ subroutine fits_lick_w(Lfits,itime,ntimes,indices,iindices,&
            tunit(i)='mag'   !unite
         endif
      enddo
-     print*, 'HELLOOOOOO ?????'
+
      call ftmahd(Lfits,3,hdutype,istat) ! move to  HDU #3
      call ftibin(Lfits,ntimes,nindices,ttype,tform,tunit,&
           'ETS_LICK',0, istat) !create binary extension
-     print*, 'FWHM final=',FWHM
+
      call ftpkyf(Lfits,'FWHM',real(FWHM),3,'FWHM (in 0.1nm)'&
           //' used for the emission lines',istat)
      if (istat.ne.0) write(*,*) 'ERREUR : istat=',istat
@@ -323,9 +317,7 @@ subroutine fits_lick_w(Lfits,itime,ntimes,indices,iindices,&
 
   !     write indices for step itime
   do i=1,nindices
-     unindice=indices(i)
-     !print*, 'unindice=',unindice,i,itime
-     call ftpcne(Lfits, i,itime, 1, 1,unindice,-999., istat)
+     call ftpcnd(Lfits, i,itime, 1, 1,indices(i),-999., istat)
      if (istat.ne.0) write(*,*) 'istat!',istat
   enddo
 

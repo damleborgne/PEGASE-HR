@@ -159,17 +159,22 @@ program colors_HR
      write(*,*) 'istat=',istat
      stop
   endif
+  write(*,*) 'hello?'
   call fits_spec_wavl_read(Lfits,nlines,lambdaline,istat)
+  write(*,*) 'hello?'
+
   if (istat.ne.0) then
      write(*,*)'COLORS: couldnt get line wavelengths in ETS file'
      stop
   endif
+
 
   !     Copy scenario information.
   call ftmahd(Lfits,1,hdutype,istat)
   j=0
   write_out=.false.
   do i=1,55
+     !Get the 80-character header record for the named keyword
      call ftgcrd(Lfits,'COMMENT',comment,istat)
      if (istat.ne.0) exit
      if (j.eq.1.and.comment(9:11).eq.'---') exit

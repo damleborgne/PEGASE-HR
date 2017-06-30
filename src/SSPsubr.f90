@@ -602,7 +602,8 @@ CONTAINS
 
     integer unit, status, readonly
     parameter(readonly = 0)
-    integer blocksize, nhdu, hdutype, keyval, colnum, frow, felem
+    integer blocksize, nhdu, hdutype, keyval, colnum
+    integer(DP) frow, felem
     real ::  nullval
     parameter(nullval = -1e37)
     character(len=8) ::  keyword, coltemplate
@@ -684,17 +685,15 @@ CONTAINS
        !     Read Z for each spectrum.
        frow = 1
        felem = 1
-       call ftgcve(unit, colnum, frow, felem, stell%nspectot, nullval,&
-            tmp, anyf, status)
+       ! get column value "e" =float;  the frow and felem parameters *must* be 64-bit integer*8 variables, instead of normal 4-byte integers.
+       call ftgcve(unit, colnum, frow, felem, stell%nspectot, nullval, tmp, anyf, status)
        do iz = 1, stell%nz
           stell%z(iz) = tmp(stell%firstspec(iz))
-          print*, stell%z(iz)
        enddo
        !     Idem for Teff.
        coltemplate = 'Teff'
        call ftgcno(unit, casesen, coltemplate, colnum, status)
-       call ftgcve(unit, colnum, frow, felem, stell%nspectot, nullval,&
-            tmp, anyf, status)
+       call ftgcve(unit, colnum, frow, felem, stell%nspectot, nullval, tmp, anyf, status)
        do iz = 1, stell%nz
           stell%Tspec(iz,0)=0.
           do ispec = 1, stell%nspecZ(iz)
@@ -704,8 +703,7 @@ CONTAINS
        !     Idem for logG.
        coltemplate = 'logG'
        call ftgcno(unit, casesen, coltemplate, colnum, status)
-       call ftgcve(unit, colnum, frow, felem, stell%nspectot, nullval,&
-            tmp, anyf, status)
+       call ftgcve(unit, colnum, frow, felem, stell%nspectot, nullval, tmp, anyf, status)
        do iz = 1, stell%nz
           do ispec = 1, stell%nspecZ(iz)
              stell%gspec(iz, ispec) = tmp(ispec+stell%firstspec(iz)-1)
@@ -714,8 +712,7 @@ CONTAINS
        !     Idem for NHI.
        coltemplate = 'NHI'
        call ftgcno(unit, casesen, coltemplate, colnum, status)
-       call ftgcve(unit, colnum, frow, felem, stell%nspectot, nullval,&
-            tmp, anyf, status)
+       call ftgcve(unit, colnum, frow, felem, stell%nspectot, nullval, tmp, anyf, status)
        do iz = 1, stell%nz
           do ispec = 1, stell%nspecZ(iz)
              stell%NHI(iz, ispec) = tmp(ispec+stell%firstspec(iz)-1)
@@ -724,8 +721,7 @@ CONTAINS
        !     Idem for NHeI.
        coltemplate = 'NHeI'
        call ftgcno(unit, casesen, coltemplate, colnum, status)
-       call ftgcve(unit, colnum, frow, felem, stell%nspectot, nullval,&
-            tmp, anyf, status)
+       call ftgcve(unit, colnum, frow, felem, stell%nspectot, nullval, tmp, anyf, status)
        do iz = 1, stell%nz
           do ispec = 1, stell%nspecZ(iz)
              stell%NHeI(iz, ispec) = tmp(ispec+stell%firstspec(iz)-1)
