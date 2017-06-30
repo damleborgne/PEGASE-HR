@@ -28,6 +28,7 @@ program compare_fits
   integer           nargs
 
 
+
   nargs=iargc()
   if (nargs.ne.2) then 
      write(*,*) 'Error : too few or too many arguments.'
@@ -64,11 +65,14 @@ program compare_fits
      stop
   endif
 
+
   do j=1,ntimes1
+
      call read_spectra_fits(Lfits1,j,Lambda1,nlambda1,Flux1,&
           Lambdalines1,nlines1,Fluxlines1,nlick1,lick1)
      call read_spectra_fits(Lfits2,j,Lambda2,nlambda2,Flux2,&
           Lambdalines2,nlines2,Fluxlines2,nlick2,lick2)
+
 
      do k=1,nlambda1
         if (Flux1(k).ne.0) then 

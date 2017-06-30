@@ -1109,9 +1109,12 @@ int fficls(fitsfile *fptr,  /* I - FITS file pointer                        */
         {
             ffbnfm(tfm, &datacode, &repeat, &width, status);
 
-            if (datacode < 0)         /* variable length array column */
-                delbyte += 8;
-            else if (datacode == 1)          /* bit column; round up  */
+            if (datacode < 0)  {       /* variable length array column */
+	        if (strchr(tfm, 'Q'))
+		  delbyte += 16;
+		else
+                  delbyte += 8;
+            } else if (datacode == 1)          /* bit column; round up  */
                 delbyte += (repeat + 7) / 8; /* to multiple of 8 bits */
             else if (datacode == 16)  /* ASCII string column */
                 delbyte += repeat;
@@ -1484,8 +1487,9 @@ int ffcpcl(fitsfile *infptr,    /* I - FITS file pointer to input file  */
   copy a column from infptr and insert it in the outfptr table.
 */
 {
-    int tstatus, colnum, typecode, anynull;
-    long tfields, repeat, width, nrows, outrows;
+    int tstatus, colnum, typecode, otypecode, anynull;
+    int inHduType, outHduType;
+    long tfields, repeat, orepeat, width, owidth, nrows, outrows;
     long inloop, outloop, maxloop, ndone, ntodo, npixels;
     long firstrow, firstelem, ii;
     char keyname[FLEN_KEYWORD], ttype[FLEN_VALUE], tform[FLEN_VALUE];
@@ -1504,25 +1508,27 @@ int ffcpcl(fitsfile *infptr,    /* I - FITS file pointer to input file  */
     }
     else if ((infptr->Fptr)->datastart == DATA_UNDEFINED)
         ffrdef(infptr, status);                /* rescan header */
-
+    inHduType = (infptr->Fptr)->hdutype;
+    
     if (outfptr->HDUposition != (outfptr->Fptr)->curhdu)
     {
         ffmahd(outfptr, (outfptr->HDUposition) + 1, NULL, status);
     }
     else if ((outfptr->Fptr)->datastart == DATA_UNDEFINED)
         ffrdef(outfptr, status);               /* rescan header */
-
+    outHduType = (outfptr->Fptr)->hdutype;
+    
     if (*status > 0)
         return(*status);
 
-    if ((infptr->Fptr)->hdutype == IMAGE_HDU || (outfptr->Fptr)->hdutype == IMAGE_HDU)
+    if (inHduType == IMAGE_HDU || outHduType == IMAGE_HDU)
     {
        ffpmsg
        ("Can not copy columns to or from IMAGE HDUs (ffcpcl)");
        return(*status = NOT_TABLE);
     }
 
-    if ( (infptr->Fptr)->hdutype == BINARY_TBL &&  (outfptr->Fptr)->hdutype == ASCII_TBL)
+    if ( inHduType == BINARY_TBL &&  outHduType == ASCII_TBL)
     {
        ffpmsg
        ("Copying from Binary table to ASCII table is not supported (ffcpcl)");
@@ -1552,7 +1558,7 @@ int ffcpcl(fitsfile *infptr,    /* I - FITS file pointer to input file  */
           return(*status = NO_TFORM);
         }
 
-        if ((infptr->Fptr)->hdutype == ASCII_TBL && (outfptr->Fptr)->hdutype == BINARY_TBL)
+        if (inHduType == ASCII_TBL && outHduType == BINARY_TBL)
         {
             /* convert from ASCII table to BINARY table format string */
             if (typecode == TSTRING)
@@ -1588,6 +1594,12 @@ int ffcpcl(fitsfile *infptr,    /* I - FITS file pointer to input file  */
            return(*status);
         }
 
+        if ((infptr->Fptr == outfptr->Fptr)
+           && (infptr->HDUposition == outfptr->HDUposition)
+           && (colnum <= incol))  {
+	       incol++;  /* the input column has been shifted over */
+        }
+
         /* copy the comment strings from the input file for TTYPE and TFORM */
         tstatus = 0;
         ffkeyn("TTYPE", colnum, keyname, &tstatus);
@@ -1613,7 +1625,7 @@ int ffcpcl(fitsfile *infptr,    /* I - FITS file pointer to input file  */
         ffcpky(infptr, outfptr, incol, colnum, "TCDLT", status);
         ffcpky(infptr, outfptr, incol, colnum, "TCROT", status);
 
-        if ((infptr->Fptr)->hdutype == ASCII_TBL && (outfptr->Fptr)->hdutype == BINARY_TBL)
+        if (inHduType == ASCII_TBL && outHduType == BINARY_TBL)
         {
             /* binary tables only have TNULLn keyword for integer columns */
             if (typecode == TLONG || typecode == TSHORT)
@@ -1642,6 +1654,13 @@ int ffcpcl(fitsfile *infptr,    /* I - FITS file pointer to input file  */
     else
     {
         colnum = outcol;
+        /* get the datatype and vector repeat length of the output column */
+        ffgtcl(outfptr, outcol, &otypecode, &orepeat, &owidth, status);
+
+        if (orepeat != repeat) {
+            ffpmsg("Input and output vector columns must have same length (ffcpcl)");
+            return(*status = BAD_TFORM);
+        }
     }
 
     ffgkyj(infptr,  "NAXIS2", &nrows,   0, status);  /* no. of input rows */
@@ -1649,8 +1668,8 @@ int ffcpcl(fitsfile *infptr,    /* I - FITS file pointer to input file  */
     nrows = minvalue(nrows, outrows);
 
     if (typecode == TBIT)
-        repeat = (repeat - 1) / 8 + 1;  /* convert from bits to bytes */
-    else if (typecode == TSTRING && (infptr->Fptr)->hdutype == BINARY_TBL)
+        repeat = (repeat + 7) / 8;  /* convert from bits to bytes */
+    else if (typecode == TSTRING && inHduType == BINARY_TBL)
         repeat = repeat / width;  /* convert from chars to unit strings */
 
     /* get optimum number of rows to copy at one time */
@@ -1822,6 +1841,96 @@ int ffcpcl(fitsfile *infptr,    /* I - FITS file pointer to input file  */
         free(dvalues);
     }
 
+    return(*status);
+}
+/*--------------------------------------------------------------------------*/
+int ffcprw(fitsfile *infptr,    /* I - FITS file pointer to input file  */
+           fitsfile *outfptr,   /* I - FITS file pointer to output file */
+           LONGLONG firstrow,   /* I - number of first row to copy (1 based)  */
+           LONGLONG nrows,      /* I - number of rows to copy  */
+           int *status)         /* IO - error status     */
+/*
+  copy consecutive set of rows from infptr and append it in the outfptr table.
+*/
+{
+    LONGLONG innaxis1, innaxis2, outnaxis1, outnaxis2, ii, jj;
+    unsigned char *buffer;
+
+    if (*status > 0)
+        return(*status);
+
+    if (infptr->HDUposition != (infptr->Fptr)->curhdu)
+    {
+        ffmahd(infptr, (infptr->HDUposition) + 1, NULL, status);
+    }
+    else if ((infptr->Fptr)->datastart == DATA_UNDEFINED)
+        ffrdef(infptr, status);                /* rescan header */
+
+    if (outfptr->HDUposition != (outfptr->Fptr)->curhdu)
+    {
+        ffmahd(outfptr, (outfptr->HDUposition) + 1, NULL, status);
+    }
+    else if ((outfptr->Fptr)->datastart == DATA_UNDEFINED)
+        ffrdef(outfptr, status);               /* rescan header */
+
+    if (*status > 0)
+        return(*status);
+
+    if ((infptr->Fptr)->hdutype == IMAGE_HDU || (outfptr->Fptr)->hdutype == IMAGE_HDU)
+    {
+       ffpmsg
+       ("Can not copy rows to or from IMAGE HDUs (ffcprw)");
+       return(*status = NOT_TABLE);
+    }
+
+    if ( ((infptr->Fptr)->hdutype == BINARY_TBL &&  (outfptr->Fptr)->hdutype == ASCII_TBL) ||
+         ((infptr->Fptr)->hdutype == ASCII_TBL &&  (outfptr->Fptr)->hdutype == BINARY_TBL) )
+    {
+       ffpmsg
+       ("Copying rows between Binary and ASCII tables is not supported (ffcprw)");
+       return(*status = NOT_BTABLE);
+    }
+
+    ffgkyjj(infptr,  "NAXIS1", &innaxis1,  0, status);  /* width of input rows */
+    ffgkyjj(infptr,  "NAXIS2", &innaxis2,  0, status);  /* no. of input rows */
+    ffgkyjj(outfptr, "NAXIS1", &outnaxis1, 0, status);  /* width of output rows */
+    ffgkyjj(outfptr, "NAXIS2", &outnaxis2, 0, status);  /* no. of output rows */
+
+    if (*status > 0)
+        return(*status);
+
+    if (outnaxis1 > innaxis1) {
+       ffpmsg
+       ("Input and output tables do not have same width (ffcprw)");
+       return(*status = BAD_ROW_WIDTH);
+    }    
+
+    if (firstrow + nrows - 1 > innaxis2) {
+       ffpmsg
+       ("Not enough rows in input table to copy (ffcprw)");
+       return(*status = BAD_ROW_NUM);
+    }
+
+    /* allocate buffer to hold 1 row of data */
+    buffer = malloc( (size_t) innaxis1);
+    if (!buffer) {
+       ffpmsg
+       ("Unable to allocate memory (ffcprw)");
+       return(*status = MEMORY_ALLOCATION);
+    }
+ 
+    /* copy the rows, 1 at a time */
+    jj = outnaxis2 + 1;
+    for (ii = firstrow; ii < firstrow + nrows; ii++) {
+        fits_read_tblbytes (infptr,  ii, 1, innaxis1, buffer, status);
+        fits_write_tblbytes(outfptr, jj, 1, innaxis1, buffer, status);
+        jj++;
+    }
+
+    outnaxis2 += nrows;
+    fits_update_key(outfptr, TLONGLONG, "NAXIS2", &outnaxis2, 0, status);
+
+    free(buffer);
     return(*status);
 }
 /*--------------------------------------------------------------------------*/

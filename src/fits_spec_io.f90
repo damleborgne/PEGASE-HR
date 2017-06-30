@@ -105,7 +105,6 @@ CONTAINS
     istat=0
     call ftgiou(Lfits,istat)  ! Get A free unit. Remember to free it with ftfiou !
     !Lfits=myscen%number
-    !call file_unit(Lfits)
     !print*, myscen%filespectra, Lfits
     call ftinit(Lfits,trim(myscen%filespectra),1,istat) ! Create an empty file
 
@@ -313,7 +312,7 @@ CONTAINS
     real,dimension(:) ::    lambda
     integer istat
 
-    real ::  step
+    real(dp) ::  step
     integer flag
     integer k
     integer hdutype
@@ -606,8 +605,8 @@ CONTAINS
     integer       blocksize,naxes(2),nfound
 
     istat=0
-    !call ftgiou(Lfits,istat)
-    call file_unit(Lfits)
+    call ftgiou(Lfits,istat)
+    !call file_unit(Lfits)
     call ftopen(Lfits,filename,0,blocksize,istat)
 
     call ftgknj(Lfits,'NAXIS',1,2,naxes,nfound,istat)     !size of the image.
@@ -632,24 +631,32 @@ CONTAINS
     integer istat
 
     integer       hdutype
-    character(len=68) ::  keyval,comment
+    character(len=120) ::  keyval,comment
     logical  :: anynulls
-    real     :: cr,cv,cd
+    real(dp)     :: cr,cv,cd
     integer  :: k
 
     istat=0
+    keyval = ' '
+    comment = ' '
     call ftmahd(Lfits,1,hdutype,istat)
+    !print*, 'istat=',istat
 
     call ftgkys(Lfits,'CTYPE1',keyval,comment,istat)
+    !print*, 'istat=',istat
     if (keyval(:4).ne.'WAVE') then
        istat=123
        return
     endif
 
     if (keyval(:8).eq.'WAVE-WAV') then ! Linear sampling of Wavelength
+      !print*, 'here1'
        call ftgkyd(Lfits,'CRPIX1',cr,comment,istat)
+       !    print*, 'istat=',istat, cr
        call ftgkyd(Lfits,'CRVAL1',cv,comment,istat)
+       !    print*, 'istat=',istat, cv
        call ftgkyd(Lfits,'CD1_1',cd,comment,istat)
+       !    print*, 'istat=',istat, cd, comment
        if(istat.ne.0) return
 
        do k=1,nw
@@ -657,7 +664,9 @@ CONTAINS
        enddo
 
     else
+      !print*, 'here2'
        call ftgkys(Lfits,'H_WCALIB',keyval,comment,istat)
+      ! print*, 'istat=',istat
        if (istat.ne.0) return
        if(keyval(1:1).eq.'[')keyval=keyval(2:)
        k=2
@@ -674,9 +683,12 @@ CONTAINS
        enddo
        istat=0
        call ftmnhd(Lfits, 2, keyval, 0, istat)
+       !    print*, 'istat=',istat
        if(istat.ne.0) return
        call ftgcno(Lfits,0,'BFIT',k,istat)
+       !    print*, 'istat=',istat
        call ftgcvd(Lfits,k,1,1,nw,-999.d0,lambda_real,anynulls,istat)
+       !    print*, 'istat=',istat
     endif
 
 
@@ -686,34 +698,56 @@ CONTAINS
   end subroutine fits_spec_wave_read
   !------------------------------------------------------------------------------
   subroutine fits_spec_wavl_read(Lfits,nlines,lambdaline,istat)
+
     implicit none
-    integer Lfits
-    integer nlines
-    real(dp),DIMENSION(:) ::  lambdaline
-    integer istat
-    character(len=68) :: comment
+
+    integer,intent(in)  :: Lfits
+    integer,intent(out)  :: nlines
+    real(dp),DIMENSION(:), INTENT(out) ::  lambdaline
+    integer istat,a
+    character(len=240) :: comment
+    character(len=10) :: keyword
 
     real,DIMENSION(nmaxlines) ::  lambdaline_real
 
     integer :: ncol
     logical :: anynulls
 
-
     istat=0
-    call ftmnhd(Lfits, 2, 'ETS_LINES', 0, istat)
-    if (istat.ne.0) return
-    call ftgkyj(Lfits, 'NAXIS2', nlines, comment, istat)
+    keyword = 'ETS_LINES'
+    call ftmnhd(Lfits, 2, keyword, 0, istat)
+    !write(*,*) 'istat=',istat
     if (istat.ne.0) return
 
-    call ftgcno(Lfits,0,'WAVE',ncol,istat)
+    !write (*,*) 'hello, nlines?', nlines
+    !nlines = 0
+    comment = ' '
+    keyword = 'naxis2'
+    call ftgkyj(Lfits, keyword, nlines, comment, istat)   ! BUGS HERE !!!!!
+    !write(*,*) 'istat=',istat,comment,nlines
+    if (istat.eq.0) then
+      !write(*,*) ''
+      a=2
+    else
+      return
+    endif
+
+    keyword = 'WAVE'
+
+    call ftgcno(Lfits,0,keyword,ncol,istat)
+    !write(*,*) 'istat=',istat
+    !write(*,*) keyword
     call ftgcvd(Lfits, ncol, 1, 1, nlines, -999.d0, lambdaline_real,&
          anynulls, istat)
+    !write(*,*) 'istat=',istat
 
     lambdaline=1d0*lambdaline_real
+
 
     return
   end subroutine fits_spec_wavl_read
   !------------------------------------------------------------------------------
+
   subroutine fits_spec_cont_r(Lfits,nlambda,itime,flux,istat)
     implicit none
 
@@ -736,35 +770,48 @@ CONTAINS
     return
   end subroutine fits_spec_cont_r
   !------------------------------------------------------------------------------
+
   subroutine fits_spec_line_r(Lfits,nlines,itime,fluxline,istat)
 
     implicit none
 
     integer, intent(in) ::  Lfits, nlines, itime
     real(dp),DIMENSION(:)  :: fluxline
-    real :: one_real
-
+    real(dp) :: one_real !! BUGFIX : NEEDS TO BE DP !!!  
+ 
     integer istat
 
-    integer ncol
+    integer ncol,ncoltrue
     logical anynulls
     integer k
 
     istat=0
     call ftmnhd(Lfits, 2, 'ETS_LINES', 0, istat)
-    if (istat.ne.0) return
+    if (istat.ne.0) then
+      print*, 'error',istat
+      return
+    endif
 
     call ftgcno(Lfits,0,'FLUXLINE',ncol,istat)
-
+    if (istat.ne.0) then
+      print*, 'error2',istat
+      return
+    endif
+    !ncol=ncoltrue
     do k=1,nlines
-       call ftgcvd(Lfits, ncol, k, itime, 1, -999.d0, one_real,&
-            anynulls, istat)
+       call ftgcvd(Lfits, ncol, k, itime, 1, -999.d0, one_real, anynulls, istat)
+       if (istat.ne.0) then
+        print*, 'error3',Lfits, ncol, k,itime, 1, -999., one_real, anynulls, istat
+        return
+       endif
+
        fluxline(k)=one_real
     enddo
 
     return
   end subroutine fits_spec_line_r
   !------------------------------------------------------------------------------
+
   subroutine fits_spec_para_r(Lfits,itime,&
        time,&
        Mgal,sigmastars,sigmaWD,sigmaBHNS,sigmasub,sigmagas,&
@@ -860,6 +907,7 @@ CONTAINS
   !------------------------------------------------------------------------------
 
   !     **************************************************
+
   subroutine fits_spec_open_rw(filename,Lfits,nw,nwl,nt,istat)
 
     implicit none
@@ -872,6 +920,7 @@ CONTAINS
 
     istat=0
     call ftgiou(Lfits,istat)
+    !call file_unit(Lfits)
     call ftopen(Lfits,filename,1,blocksize,istat) !rwmode=1?
     call ftgknj(Lfits,'NAXIS',1,2,naxes,nfound,istat)     !size of the image.
     if (nfound .ne. 2)then
@@ -894,7 +943,9 @@ CONTAINS
 
 
   end subroutine fits_spec_open_rw
+
   !     **************************************************
+
   subroutine read_spectra_fits(Lfits,iage,Lambda,nlambda,&
        Flux,Lambdalines,nlines,Fluxlines,nlick,licktab)
     !     Reads a pegase FITS spectrum      
@@ -906,7 +957,7 @@ CONTAINS
 
     integer                :: iage,nlambda,istat,nlines
     real(dp), dimension(:) :: Lambda,Lambdalines,Flux,Fluxlines
-    integer                :: Lfits,nlick,i,k,nt
+    integer                :: Lfits,nlick,i,nt
     real(dp),dimension(:)  :: licktab
     logical                :: anynulls
     logical,dimension(nmaxotimes) :: flagvals
@@ -916,7 +967,7 @@ CONTAINS
 
     call fits_spec_wave_read(Lfits,nlambda,Lambda,istat) 
     if (istat.ne.0) then
-       write(*,*)'Lick: could not get cnt wavelengths in ETS file'
+       write(*,*)'Lick: could not get cnt wavelengths in ETS file : issue in fits_spec_wave_read', istat, Lfits
        stop
     endif
     call fits_spec_cont_r(Lfits,nlambda,iage,Flux,istat)
@@ -927,17 +978,18 @@ CONTAINS
 
     !     read lines 
     call fits_spec_wavl_read(Lfits,nlines,Lambdalines,istat)
+
     if (istat.ne.0) then
-       write(*,*)'Lick: could not get line wavelengths in ETS file'
+       write(*,*)'Lick: could not get line wavelengths in ETS file : issue in fits_spec_wavl_read this time...'
        write(*,*) 'istat=',istat
        stop
     endif
+
     call fits_spec_line_r(Lfits,nlines,iage,Fluxlines,istat)
     if (istat.ne.0) then
        write(*,*)'Lick: err3'
        stop
     endif
-
 
     call ftmnhd(Lfits, 2, 'ETS_LICK', 0, istat)
     if (istat.eq.0) then
@@ -956,7 +1008,52 @@ CONTAINS
        istat=0
     endif
 
-
   end subroutine read_spectra_fits
+
+  !******************************************************************************************
+
+  subroutine read_spectra_fits_lick(Lfits,iage,Lambda,nlambda,&
+       Flux,Lambdalines,nlines,Fluxlines)
+    !     Reads a pegase FITS spectrum      
+
+    use types
+    use constants
+
+    implicit none
+
+    integer             iage,nlambda,istat,nlines
+    REAL(DP), dimension(:), intent(out) ::   Lambda, Flux
+    REAL(DP), dimension(:), intent(out) :: Lambdalines,Fluxlines
+    integer, intent(in)            :: Lfits
+
+    !write(*,*) 'LFITS=',Lfits
+    call fits_spec_wave_read(Lfits,nlambda,Lambda,istat) 
+    !write(*,*) 'LFITS=',Lfits
+    if (istat.ne.0) then
+       write(*,*)'Lick: could not get cnt wavelengths in ETS file : issue in fits_spec_wave_read for a change'
+       stop
+    endif
+    call fits_spec_cont_r(Lfits,nlambda,iage,Flux,istat)
+    !write(*,*) 'LFITS=',Lfits
+    if (istat.ne.0) then
+       write(*,*)'Lick: err2'
+       stop
+    endif
+
+    !     read lines 
+    !write(*,*) 'GO', nlines, Lambdalines
+    call fits_spec_wavl_read(Lfits,nlines,Lambdalines,istat)
+    ! write(*,*) 'LFITS=',Lfits
+    if (istat.ne.0) then
+       write(*,*)'Lick: could not get line wavelengths in ETS file'
+       write(*,*) 'istat=',istat
+       stop
+    endif
+    call fits_spec_line_r(Lfits,nlines,iage,Fluxlines,istat)
+    if (istat.ne.0) then
+       write(*,*)'Lick: err3 bis', istat
+       stop
+    endif
+  end subroutine read_spectra_fits_lick
 
 END MODULE fits_spec_io

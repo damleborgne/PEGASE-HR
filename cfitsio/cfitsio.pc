@@ -5,6 +5,7 @@ includedir=${prefix}/include
 
 Name: cfitsio
 Description: FITS File Subroutine Library
-Version: 3.006
-Libs: -L${libdir} -lcfitsio  -lm
+Version: 3.41
+Libs: -L${libdir} -lcfitsio 
+Libs.private: -lm
 Cflags: -I${includedir}

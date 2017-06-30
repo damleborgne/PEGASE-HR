@@ -61,6 +61,8 @@
 /*  Craig B Markwardt Sum 2006  Add RANDOMN() and RANDOMP() functions   */
 /*  Craig B Markwardt Mar 2007  Allow arguments to RANDOM and RANDOMN to*/
 /*                              determine the output dimensions         */
+/*  Craig B Markwardt Aug 2009  Add substring STRMID() and string search*/
+/*                              STRSTR() functions; more overflow checks*/
 /*                                                                      */
 /************************************************************************/
 
@@ -74,6 +76,9 @@
 #ifndef alloca
 #define alloca malloc
 #endif
+
+/* Random number generators for various distributions */
+#include "simplerng.h"
 
    /*  Shrink the initial stack depth to keep local data <32K (mac limit)  */
    /*  yacc will allocate more space if needed, though.                    */
@@ -106,6 +111,7 @@
 #define TEST(a)        if( (a)<0 ) YYERROR
 #define SIZE(a)        gParse.Nodes[ a ].value.nelem
 #define TYPE(a)        gParse.Nodes[ a ].type
+#define OPER(a)        gParse.Nodes[ a ].operation
 #define PROMOTE(a,b)   if( TYPE(a) > TYPE(b) )                  \
                           b = New_Unary( TYPE(a), 0, b );       \
                        else if( TYPE(a) < TYPE(b) )             \
@@ -129,6 +135,9 @@ static int  New_BinOp ( int returnType, int Node1, int Op, int Node2 );
 static int  New_Func  ( int returnType, funcOp Op, int nNodes,
 			int Node1, int Node2, int Node3, int Node4, 
 			int Node5, int Node6, int Node7 );
+static int  New_FuncSize( int returnType, funcOp Op, int nNodes,
+			int Node1, int Node2, int Node3, int Node4, 
+			  int Node5, int Node6, int Node7, int Size);
 static int  New_Deref ( int Var,  int nDim,
 			int Dim1, int Dim2, int Dim3, int Dim4, int Dim5 );
 static int  New_GTI   ( char *fname, int Node1, char *start, char *stop );
@@ -169,6 +178,8 @@ static char  bitlgte(char *bits1, int oper, char *bits2);
 static void  bitand(char *result, char *bitstrm1, char *bitstrm2);
 static void  bitor (char *result, char *bitstrm1, char *bitstrm2);
 static void  bitnot(char *result, char *bits);
+static int cstrmid(char *dest_str, int dest_len,
+		   char *src_str,  int src_len, int pos);
 
 static void  yyerror(char *msg);
 
@@ -183,7 +194,7 @@ static void  yyerror(char *msg);
     double dbl;         /* real value    */
     long   lng;         /* integer value */
     char   log;         /* logical value */
-    char   str[256];    /* string value  */
+    char   str[MAX_STRLEN];    /* string value  */
 }
 
 %token <log>   BOOLEAN        /* First 3 must be in order of        */
@@ -192,7 +203,8 @@ static void  yyerror(char *msg);
 %token <str>   STRING
 %token <str>   BITSTR
 %token <str>   FUNCTION
-%token <str>   BFUNCTION
+%token <str>   BFUNCTION      /* Bit function */
+%token <str>   IFUNCTION      /* Integer function */
 %token <str>   GTIFILTER
 %token <str>   REGFILTER
 %token <lng>   COLUMN
@@ -327,14 +339,13 @@ bexpr:   bvector '}'
 bits:	 BITSTR
                 {
                   $$ = New_Const( BITSTR, $1, strlen($1)+1 ); TEST($$);
-		  SIZE($$) = strlen($1);
-		}
+		  SIZE($$) = strlen($1); }
        | BITCOL
                 { $$ = New_Column( $1 ); TEST($$); }
        | BITCOL '{' expr '}'
                 {
                   if( TYPE($3) != LONG
-		      || gParse.Nodes[$3].operation != CONST_OP ) {
+		      || OPER($3) != CONST_OP ) {
 		     yyerror("Offset argument must be a constant integer");
 		     YYERROR;
 		  }
@@ -347,8 +358,14 @@ bits:	 BITSTR
                 { $$ = New_BinOp( BITSTR, $1, '|', $3 ); TEST($$);
                   SIZE($$) = ( SIZE($1)>SIZE($3) ? SIZE($1) : SIZE($3) );  }
        | bits '+' bits
-                { $$ = New_BinOp( BITSTR, $1, '+', $3 ); TEST($$);
-                  SIZE($$) = SIZE($1) + SIZE($3);                          }
+                { 
+		  if (SIZE($1)+SIZE($3) >= MAX_STRLEN) {
+		    yyerror("Combined bit string size exceeds " MAX_STRLEN_S " bits");
+		    YYERROR;
+		  }
+		  $$ = New_BinOp( BITSTR, $1, '+', $3 ); TEST($$);
+                  SIZE($$) = SIZE($1) + SIZE($3); 
+		}
        | bits '[' expr ']'
                 { $$ = New_Deref( $1, 1, $3,  0,  0,  0,   0 ); TEST($$); }
        | bits '[' expr ',' expr ']'
@@ -375,7 +392,7 @@ expr:    LONG
        | COLUMN '{' expr '}'
                 {
                   if( TYPE($3) != LONG
-		      || gParse.Nodes[$3].operation != CONST_OP ) {
+		      || OPER($3) != CONST_OP ) {
 		     yyerror("Offset argument must be a constant integer");
 		     YYERROR;
 		  }
@@ -476,10 +493,8 @@ expr:    LONG
                 }
        | FUNCTION ')'
                 { if (FSTRCMP($1,"RANDOM(") == 0) {  /* Scalar RANDOM() */
-                     srand( (unsigned int) time(NULL) );
                      $$ = New_Func( DOUBLE, rnd_fct, 0, 0, 0, 0, 0, 0, 0, 0 );
 		  } else if (FSTRCMP($1,"RANDOMN(") == 0) {/*Scalar RANDOMN()*/
-		     srand( (unsigned int) time(NULL) );
 		     $$ = New_Func( DOUBLE, gasrnd_fct, 0, 0, 0, 0, 0, 0, 0, 0 );
                   } else {
                      yyerror("Function() not supported");
@@ -524,6 +539,9 @@ expr:    LONG
 		} else if (FSTRCMP($1,"MIN(") == 0) {
 		     $$ = New_Func( TYPE($2),  /* Force 1D result */
 				    min1_fct, 1, $2, 0, 0, 0, 0, 0, 0 );
+		     /* Note: $2 is a vector so the result can never
+		        be a constant.  Therefore it will never be set
+		        inside New_Func(), and it is safe to set SIZE() */
 		     SIZE($$) = 1;
 		} else if (FSTRCMP($1,"ACCUM(") == 0) {
 		    long zero = 0;
@@ -531,6 +549,9 @@ expr:    LONG
 		} else if (FSTRCMP($1,"MAX(") == 0) {
 		     $$ = New_Func( TYPE($2),  /* Force 1D result */
 				    max1_fct, 1, $2, 0, 0, 0, 0, 0, 0 );
+		     /* Note: $2 is a vector so the result can never
+		        be a constant.  Therefore it will never be set
+		        inside New_Func(), and it is safe to set SIZE() */
 		     SIZE($$) = 1;
 		} else {
                      yyerror("Function(bits) not supported");
@@ -577,12 +598,12 @@ expr:    LONG
 		     $$ = New_Func( TYPE($2),  /* Force 1D result */
 				    max1_fct, 1, $2, 0, 0, 0, 0, 0, 0 );
 		  else if (FSTRCMP($1,"RANDOM(") == 0) { /* Vector RANDOM() */
-                     srand( (unsigned int) time(NULL) );
                      $$ = New_Func( 0, rnd_fct, 1, $2, 0, 0, 0, 0, 0, 0 );
+		     TEST($$);
 		     TYPE($$) = DOUBLE;
 		  } else if (FSTRCMP($1,"RANDOMN(") == 0) {
-		     srand( (unsigned int) time(NULL) ); /* Vector RANDOMN() */
 		     $$ = New_Func( 0, gasrnd_fct, 1, $2, 0, 0, 0, 0, 0, 0 );
+		     TEST($$);
 		     TYPE($$) = DOUBLE;
                   } 
   		  else {  /*  These all take DOUBLE arguments  */
@@ -623,7 +644,6 @@ expr:    LONG
 		     else if (FSTRCMP($1,"CEIL(") == 0)
 			$$ = New_Func( 0, ceil_fct, 1, $2, 0, 0, 0, 0, 0, 0 );
 		     else if (FSTRCMP($1,"RANDOMP(") == 0) {
-		       srand( (unsigned int) time(NULL) );
 		       $$ = New_Func( 0, poirnd_fct, 1, $2, 
 				      0, 0, 0, 0, 0, 0 );
 		       TYPE($$) = LONG;
@@ -633,6 +653,14 @@ expr:    LONG
 		     }
 		  }
                   TEST($$); 
+                }
+       | IFUNCTION sexpr ',' sexpr ')'
+                { 
+		  if (FSTRCMP($1,"STRSTR(") == 0) {
+		    $$ = New_Func( LONG, strpos_fct, 2, $2, $4, 0, 
+				   0, 0, 0, 0 );
+		    TEST($$);
+		  }
                 }
        | FUNCTION expr ',' expr ')'
                 { 
@@ -681,6 +709,16 @@ expr:    LONG
 				"are not compatible");
 			YYERROR;
 		      }
+#if 0
+		   } else if (FSTRCMP($1,"STRSTR(") == 0) {
+		     if( TYPE($2) != STRING || TYPE($4) != STRING) {
+		       yyerror("Arguments to strstr(s,r) must be strings");
+		       YYERROR;
+		     }
+		     $$ = New_Func( LONG, strpos_fct, 2, $2, $4, 0, 
+				    0, 0, 0, 0 );
+		     TEST($$);
+#endif
 		   } else {
 		      yyerror("Function(expr,expr) not supported");
 		      YYERROR;
@@ -737,7 +775,7 @@ bexpr:   BOOLEAN
        | BCOLUMN '{' expr '}'
                 {
                   if( TYPE($3) != LONG
-		      || gParse.Nodes[$3].operation != CONST_OP ) {
+		      || OPER($3) != CONST_OP ) {
 		     yyerror("Offset argument must be a constant integer");
 		     YYERROR;
 		  }
@@ -1019,13 +1057,13 @@ bexpr:   BOOLEAN
 
 sexpr:   STRING
                 { $$ = New_Const( STRING, $1, strlen($1)+1 ); TEST($$);
-                  SIZE($$) = strlen($1);                            }
+                  SIZE($$) = strlen($1); }
        | SCOLUMN
                 { $$ = New_Column( $1 ); TEST($$); }
        | SCOLUMN '{' expr '}'
                 {
                   if( TYPE($3) != LONG
-		      || gParse.Nodes[$3].operation != CONST_OP ) {
+		      || OPER($3) != CONST_OP ) {
 		     yyerror("Offset argument must be a constant integer");
 		     YYERROR;
 		  }
@@ -1036,16 +1074,29 @@ sexpr:   STRING
        | '(' sexpr ')'
                 { $$ = $2; }
        | sexpr '+' sexpr
-                { $$ = New_BinOp( STRING, $1, '+', $3 );  TEST($$);
-		  SIZE($$) = SIZE($1) + SIZE($3);                   }
+                { 
+		  if (SIZE($1)+SIZE($3) >= MAX_STRLEN) {
+		    yyerror("Combined string size exceeds " MAX_STRLEN_S " characters");
+		    YYERROR;
+		  }
+		  $$ = New_BinOp( STRING, $1, '+', $3 );  TEST($$);
+		  SIZE($$) = SIZE($1) + SIZE($3);
+		}
        | bexpr '?' sexpr ':' sexpr
                 {
+		  int outSize;
                   if( SIZE($1)!=1 ) {
                      yyerror("Cannot have a vector string column");
 		     YYERROR;
                   }
-                  $$ = New_Func( 0, ifthenelse_fct, 3, $3, $5, $1,
-                                 0, 0, 0, 0 );
+		  /* Since the output can be calculated now, as a constant
+		     scalar, we must precalculate the output size, in
+		     order to avoid an overflow. */
+		  outSize = SIZE($3);
+		  if (SIZE($5) > outSize) outSize = SIZE($5);
+                  $$ = New_FuncSize( 0, ifthenelse_fct, 3, $3, $5, $1,
+				     0, 0, 0, 0, outSize);
+		  
                   TEST($$);
                   if( SIZE($3)<SIZE($5) )  Copy_Dims($$, $5);
                 }
@@ -1053,12 +1104,50 @@ sexpr:   STRING
        | FUNCTION sexpr ',' sexpr ')'
                 { 
 		  if (FSTRCMP($1,"DEFNULL(") == 0) {
-		     $$ = New_Func( 0, defnull_fct, 2, $2, $4, 0,
-				    0, 0, 0, 0 );
+		     int outSize;
+		     /* Since the output can be calculated now, as a constant
+			scalar, we must precalculate the output size, in
+			order to avoid an overflow. */
+		     outSize = SIZE($2);
+		     if (SIZE($4) > outSize) outSize = SIZE($4);
+		     
+		     $$ = New_FuncSize( 0, defnull_fct, 2, $2, $4, 0,
+					0, 0, 0, 0, outSize );
 		     TEST($$); 
 		     if( SIZE($4)>SIZE($2) ) SIZE($$) = SIZE($4);
+		  } else {
+		     yyerror("Function(string,string) not supported");
+		     YYERROR;
 		  }
 		}
+       | FUNCTION sexpr ',' expr ',' expr ')'
+                { 
+		  if (FSTRCMP($1,"STRMID(") == 0) {
+		    int len;
+		    if( TYPE($4) != LONG || SIZE($4) != 1 ||
+			TYPE($6) != LONG || SIZE($6) != 1) {
+		      yyerror("When using STRMID(S,P,N), P and N must be integers (and not vector columns)");
+		      YYERROR;
+		    }
+		    if (OPER($6) == CONST_OP) {
+		      /* Constant value: use that directly */
+		      len = (gParse.Nodes[$6].value.data.lng);
+		    } else {
+		      /* Variable value: use the maximum possible (from $2) */
+		      len = SIZE($2);
+		    }
+		    if (len <= 0 || len >= MAX_STRLEN) {
+		      yyerror("STRMID(S,P,N), N must be 1-" MAX_STRLEN_S);
+		      YYERROR;
+		    }
+		    $$ = New_FuncSize( 0, strmid_fct, 3, $2, $4,$6,0,0,0,0,len);
+		    TEST($$);
+		  } else {
+		     yyerror("Function(string,expr,expr) not supported");
+		     YYERROR;
+		  }
+		}
+
 	;
 
 %%
@@ -1255,6 +1344,15 @@ static int New_BinOp( int returnType, int Node1, int Op, int Node2 )
 static int New_Func( int returnType, funcOp Op, int nNodes,
 		     int Node1, int Node2, int Node3, int Node4, 
 		     int Node5, int Node6, int Node7 )
+{
+  return New_FuncSize(returnType, Op, nNodes,
+		      Node1, Node2, Node3, Node4, 
+		      Node5, Node6, Node7, 0);
+}
+
+static int New_FuncSize( int returnType, funcOp Op, int nNodes,
+		     int Node1, int Node2, int Node3, int Node4, 
+			 int Node5, int Node6, int Node7, int Size )
 /* If returnType==0 , use Node1's type and vector sizes as returnType, */
 /* else return a single value of type returnType                       */
 {
@@ -1281,8 +1379,7 @@ static int New_Func( int returnType, funcOp Op, int nNodes,
       if (Op == poirnd_fct) constant = 0; /* Nor is Poisson deviate */
 
       while( i-- )
-         constant = ( constant &&
-		      gParse.Nodes[ this->SubNodes[i] ].operation==CONST_OP );
+	constant = ( constant && OPER(this->SubNodes[i]) == CONST_OP );
       
       if( returnType ) {
 	 this->type           = returnType;
@@ -1297,6 +1394,9 @@ static int New_Func( int returnType, funcOp Op, int nNodes,
 	 for( i=0; i<that->value.naxis; i++ )
 	    this->value.naxes[i] = that->value.naxes[i];
       }
+      /* Force explicit size before evaluating */
+      if (Size > 0) this->value.nelem = Size;
+
       if( constant ) this->DoOp( this );
    }
    return( n );
@@ -1568,7 +1668,7 @@ static int New_GTI( char *fname, int Node1, char *start, char *stop )
 	       that0->value.data.dblptr[i] += dt;
 	 }
       }
-      if( gParse.Nodes[Node1].operation==CONST_OP )
+      if( OPER(Node1)==CONST_OP )
 	 this->DoOp( this );
    }
 
@@ -1709,8 +1809,7 @@ static int New_REG( char *fname, int NodeX, int NodeY, char *colNames )
 
       that0->value.data.ptr = Rgn;
 
-      if( gParse.Nodes[NodeX].operation==CONST_OP
-	  && gParse.Nodes[NodeY].operation==CONST_OP )
+      if( OPER(NodeX)==CONST_OP && OPER(NodeY)==CONST_OP )
 	 this->DoOp( this );
    }
 
@@ -1855,6 +1954,13 @@ void Evaluate_Parser( long firstRow, long nRows )
 {
    int     i, column;
    long    offset, rowOffset;
+   static int rand_initialized = 0;
+
+   /* Initialize the random number generator once and only once */
+   if (rand_initialized == 0) {
+     simplerng_srand( (unsigned int) time(NULL) );
+     rand_initialized = 1;
+   }
 
    gParse.firstRow = firstRow;
    gParse.nRows    = nRows;
@@ -1863,10 +1969,9 @@ void Evaluate_Parser( long firstRow, long nRows )
 
    rowOffset = firstRow - gParse.firstDataRow;
    for( i=0; i<gParse.nNodes; i++ ) {
-      if(    gParse.Nodes[i].operation >  0
-	  || gParse.Nodes[i].operation == CONST_OP ) continue;
+     if(    OPER(i) >  0 || OPER(i) == CONST_OP ) continue;
 
-      column = -gParse.Nodes[i].operation;
+      column = -OPER(i);
       offset = gParse.varData[column].nelem * rowOffset;
 
       gParse.Nodes[i].value.undef = gParse.varData[column].undef + offset;
@@ -3233,25 +3338,12 @@ double qselect_median_dbl(double arr[], int n)
  */
 double angsep_calc(double ra1, double dec1, double ra2, double dec2)
 {
-  double cd;
+/*  double cd;  */
   static double deg = 0;
   double a, sdec, sra;
   
   if (deg == 0) deg = ((double)4)*atan((double)1)/((double)180);
   /* deg = 1.0; **** UNCOMMENT IF YOU WANT RADIANS */
-
-
-  
-/*
-This (commented out) algorithm uses the Low of Cosines, which becomes
- unstable for angles less than 0.1 arcsec. 
- 
-  cd = sin(dec1*deg)*sin(dec2*deg) 
-    + cos(dec1*deg)*cos(dec2*deg)*cos((ra1-ra2)*deg);
-  if (cd < (-1)) cd = -1;
-  if (cd > (+1)) cd = +1;
-  return acos(cd)/deg;
-*/
 
   /* The algorithm is the law of Haversines.  This algorithm is
      stable even when the points are close together.  The normal
@@ -3266,114 +3358,6 @@ This (commented out) algorithm uses the Low of Cosines, which becomes
   if (a > 1) { a = 1; }
 
   return 2.0*atan2(sqrt(a), sqrt(1.0 - a)) / deg;
-}
-
-
-
-
-
-
-static double ran1()
-{
-  static double dval = 0.0;
-  double rndVal;
-
-  if (dval == 0.0) {
-    if( rand()<32768 && rand()<32768 )
-      dval =      32768.0;
-    else
-      dval = 2147483648.0;
-  }
-
-  rndVal = (double)rand();
-  while( rndVal > dval ) dval *= 2.0;
-  return rndVal/dval;
-}
-
-/* Gaussian deviate routine from Numerical Recipes */
-static double gasdev()
-{
-  static int iset = 0;
-  static double gset;
-  double fac, rsq, v1, v2;
-
-  if (iset == 0) {
-    do {
-      v1 = 2.0*ran1()-1.0;
-      v2 = 2.0*ran1()-1.0;
-      rsq = v1*v1 + v2*v2;
-    } while (rsq >= 1.0 || rsq == 0.0);
-    fac = sqrt(-2.0*log(rsq)/rsq);
-    gset = v1*fac;
-    iset = 1;
-    return v2*fac;
-  } else {
-    iset = 0;
-    return gset;
-  }
-
-}
-
-/* lgamma function - from Numerical Recipes */
-
-float gammaln(float xx)
-     /* Returns the value ln Gamma[(xx)] for xx > 0. */
-{
-  /* 
-     Internal arithmetic will be done in double precision, a nicety
-     that you can omit if five-figure accuracy is good enough. */
-  double x,y,tmp,ser;
-  static double cof[6]={76.18009172947146,-86.50532032941677,
-			24.01409824083091,-1.231739572450155,
-			0.1208650973866179e-2,-0.5395239384953e-5};
-  int j;
-  y=x=xx;
-  tmp=x+5.5;
-  tmp -= (x+0.5)*log(tmp);
-  ser=1.000000000190015;
-  for (j=0;j<=5;j++) ser += cof[j]/++y;
-  return (float) -tmp+log(2.5066282746310005*ser/x);
-}
-
-/* Poisson deviate - derived from Numerical Recipes */
-static long poidev(double xm)
-{
-  static double sq, alxm, g, oldm = -1.0;
-  static double pi = 0;
-  double em, t, y;
-
-  if (pi == 0) pi = ((double)4)*atan((double)1);
-
-  if (xm < 20.0) {
-    if (xm != oldm) {
-      oldm = xm;
-      g = exp(-xm);
-    }
-    em = -1;
-    t = 1.0;
-    do {
-      em += 1;
-      t *= ran1();
-    } while (t > g);
-  } else {
-    if (xm != oldm) {
-      oldm = xm;
-      sq = sqrt(2.0*xm);
-      alxm = log(xm);
-      g = xm*alxm-gammaln( (float) (xm+1.0));
-    }
-    do {
-      do {
-	y = tan(pi*ran1());
-	em = sq*y+xm;
-      } while (em < 0.0);
-      em = floor(em);
-      t = 0.9*(1.0+y*y)*exp(em*alxm-gammaln( (float) (em+1.0) )-g);
-    } while (ran1() > t);
-  }
-
-  /* Return integer version */
-  return (long int) floor(em+0.5);
 }
 
 static void Do_Func( Node *this )
@@ -3409,6 +3393,7 @@ static void Do_Func( Node *this )
    }
 
    if( this->nSubNodes==0 ) allConst = 0; /* These do produce scalars */
+   /* Random numbers are *never* constant !! */
    if( this->operation == poirnd_fct ) allConst = 0;
    if( this->operation == gasrnd_fct ) allConst = 0;
    if( this->operation == rnd_fct ) allConst = 0;
@@ -3449,9 +3434,9 @@ static void Do_Func( Node *this )
 
 	 case poirnd_fct:
 	    if( theParams[0]->type==DOUBLE )
-	      this->value.data.lng = poidev(pVals[0].data.dbl);
+	      this->value.data.lng = simplerng_getpoisson(pVals[0].data.dbl);
 	    else
-	      this->value.data.lng = poidev(pVals[0].data.lng);
+	      this->value.data.lng = simplerng_getpoisson(pVals[0].data.lng);
 	    break;
 
 	 case abs_fct:
@@ -3653,6 +3638,23 @@ static void Do_Func( Node *this )
             }
             break;
 
+	    /* String functions */
+         case strmid_fct:
+	   cstrmid(this->value.data.str, this->value.nelem, 
+		   pVals[0].data.str,    pVals[0].nelem,
+		   pVals[1].data.lng);
+	   break;
+         case strpos_fct:
+	   {
+	     char *res = strstr(pVals[0].data.str, pVals[1].data.str);
+	     if (res == NULL) {
+	       this->value.data.lng = 0; 
+	     } else {
+	       this->value.data.lng = (res - pVals[0].data.str) + 1;
+	     }
+	     break;
+	   }
+
       }
       this->operation = CONST_OP;
 
@@ -3689,14 +3691,14 @@ static void Do_Func( Node *this )
 	    break;
 	 case rnd_fct:
 	   while( elem-- ) {
-	     this->value.data.dblptr[elem] = ran1();
+	     this->value.data.dblptr[elem] = simplerng_getuniform();
 	     this->value.undef[elem] = 0;
 	    }
 	    break;
 
 	 case gasrnd_fct:
 	    while( elem-- ) {
-	       this->value.data.dblptr[elem] = gasdev();
+	       this->value.data.dblptr[elem] = simplerng_getnorm();
 	       this->value.undef[elem] = 0;
 	    }
 	    break;
@@ -3707,7 +3709,7 @@ static void Do_Func( Node *this )
 		while( elem-- ) {
 		  this->value.undef[elem] = (pVals[0].data.dbl < 0);
 		  if (! this->value.undef[elem]) {
-		    this->value.data.lngptr[elem] = poidev(pVals[0].data.dbl);
+		    this->value.data.lngptr[elem] = simplerng_getpoisson(pVals[0].data.dbl);
 		  }
 		} 
 	      } else {
@@ -3717,7 +3719,7 @@ static void Do_Func( Node *this )
 		    this->value.undef[elem] = 1;
 		  if (! this->value.undef[elem]) {
 		    this->value.data.lngptr[elem] = 
-		      poidev(theParams[0]->value.data.dblptr[elem]);
+		      simplerng_getpoisson(theParams[0]->value.data.dblptr[elem]);
 		  }
 		} /* while */
 	      } /* ! CONST_OP */
@@ -3727,7 +3729,7 @@ static void Do_Func( Node *this )
 		while( elem-- ) {
 		  this->value.undef[elem] = (pVals[0].data.lng < 0);
 		  if (! this->value.undef[elem]) {
-		    this->value.data.lngptr[elem] = poidev(pVals[0].data.lng);
+		    this->value.data.lngptr[elem] = simplerng_getpoisson(pVals[0].data.lng);
 		  }
 		} 
 	      } else {
@@ -3737,7 +3739,7 @@ static void Do_Func( Node *this )
 		    this->value.undef[elem] = 1;
 		  if (! this->value.undef[elem]) {
 		    this->value.data.lngptr[elem] = 
-		      poidev(theParams[0]->value.data.lngptr[elem]);
+		      simplerng_getpoisson(theParams[0]->value.data.lngptr[elem]);
 		  }
 		} /* while */
 	      } /* ! CONST_OP */
@@ -3953,7 +3955,7 @@ static void Do_Func( Node *this )
 	       for (irow=0; irow<row; irow++) {
 		  long *p = mptr;
 		  int nelem1 = nelem;
-		  int count = 0;
+
 
 		  while ( nelem1-- ) { 
 		    if (*uptr == 0) {
@@ -4837,9 +4839,92 @@ static void Do_Func( Node *this )
             }
             break;
 
-	 }
-      }
-   }
+	    /* String functions */
+            case strmid_fct:
+	      {
+		int strconst = theParams[0]->operation == CONST_OP;
+		int posconst = theParams[1]->operation == CONST_OP;
+		int lenconst = theParams[2]->operation == CONST_OP;
+		int dest_len = this->value.nelem;
+		int src_len  = theParams[0]->value.nelem;
+
+		while (row--) {
+		  int pos;
+		  int len;
+		  char *str;
+		  int undef = 0;
+
+		  if (posconst) {
+		    pos = theParams[1]->value.data.lng;
+		  } else {
+		    pos = theParams[1]->value.data.lngptr[row];
+		    if (theParams[1]->value.undef[row]) undef = 1;
+		  }
+		  if (strconst) {
+		    str = theParams[0]->value.data.str;
+		    if (src_len == 0) src_len = strlen(str);
+		  } else {
+		    str = theParams[0]->value.data.strptr[row];
+		    if (theParams[0]->value.undef[row]) undef = 1;
+		  }
+		  if (lenconst) {
+		    len = dest_len;
+		  } else {
+		    len = theParams[2]->value.data.lngptr[row];
+		    if (theParams[2]->value.undef[row]) undef = 1;
+		  }
+		  this->value.data.strptr[row][0] = '\0';
+		  if (pos == 0) undef = 1;
+		  if (! undef ) {
+		    if (cstrmid(this->value.data.strptr[row], len,
+				str, src_len, pos) < 0) break;
+		  }
+		  this->value.undef[row] = undef;
+		}
+	      }		      
+	      break;
+
+	    /* String functions */
+            case strpos_fct:
+	      {
+		int const1 = theParams[0]->operation == CONST_OP;
+		int const2 = theParams[1]->operation == CONST_OP;
+
+		while (row--) {
+		  char *str1, *str2;
+		  int undef = 0;
+
+		  if (const1) {
+		    str1 = theParams[0]->value.data.str;
+		  } else {
+		    str1 = theParams[0]->value.data.strptr[row];
+		    if (theParams[0]->value.undef[row]) undef = 1;
+		  }
+		  if (const2) {
+		    str2 = theParams[1]->value.data.str;
+		  } else {
+		    str2 = theParams[1]->value.data.strptr[row];
+		    if (theParams[1]->value.undef[row]) undef = 1;
+		  }
+		  this->value.data.lngptr[row] = 0;
+		  if (! undef ) {
+		    char *res = strstr(str1, str2);
+		    if (res == NULL) {
+		      undef = 1;
+		      this->value.data.lngptr[row] = 0; 
+		    } else {
+		      this->value.data.lngptr[row] = (res - str1) + 1;
+		    }
+		  }
+		  this->value.undef[row] = undef;
+		}
+	      }
+	      break;
+
+		    
+	 } /* End switch(this->operation) */
+      } /* End if (!gParse.status) */
+   } /* End non-constant operations */
 
    i = this->nSubNodes;
    while( i-- ) {
@@ -5324,8 +5409,8 @@ static void Do_Vector( Node *this )
    }
 
    for( node=0; node < this->nSubNodes; node++ )
-      if( gParse.Nodes[this->SubNodes[node]].operation>0 )
-	 free( gParse.Nodes[this->SubNodes[node]].value.data.ptr );
+     if( OPER(this->SubNodes[node])>0 )
+       free( gParse.Nodes[this->SubNodes[node]].value.data.ptr );
 }
 
 /*****************************************************************************/
@@ -5337,14 +5422,15 @@ static char bitlgte(char *bits1, int oper, char *bits2)
  int val1, val2, nextbit;
  char result;
  int i, l1, l2, length, ldiff;
- char stream[256];
+ char *stream=0;
  char chr1, chr2;
 
  l1 = strlen(bits1);
  l2 = strlen(bits2);
+ length = (l1 > l2) ? l1 : l2;
+ stream = (char *)malloc(sizeof(char)*(length+1));
  if (l1 < l2)
    {
-    length = l2;
     ldiff = l2 - l1;
     i=0;
     while( ldiff-- ) stream[i++] = '0';
@@ -5354,7 +5440,6 @@ static char bitlgte(char *bits1, int oper, char *bits2)
    }
  else if (l2 < l1)
    {
-    length = l1;
     ldiff = l1 - l2;
     i=0;
     while( ldiff-- ) stream[i++] = '0';
@@ -5362,8 +5447,6 @@ static char bitlgte(char *bits1, int oper, char *bits2)
     stream[i] = '\0';
     bits2 = stream;
    }
- else
-    length = l1;
 
  val1 = val2 = 0;
  nextbit = 1;
@@ -5395,17 +5478,20 @@ static char bitlgte(char *bits1, int oper, char *bits2)
              if (val1 >= val2) result = 1;
              break;
        }
+ free(stream);
  return (result);
 }
 
 static void bitand(char *result,char *bitstrm1,char *bitstrm2)
 {
- int i, l1, l2, ldiff;
- char stream[256];
+ int i, l1, l2, ldiff, largestStream;
+ char *stream=0;
  char chr1, chr2;
 
  l1 = strlen(bitstrm1);
  l2 = strlen(bitstrm2);
+ largestStream = (l1 > l2) ? l1 : l2;
+ stream = (char *)malloc(sizeof(char)*(largestStream+1));
  if (l1 < l2)
    {
     ldiff = l2 - l1;
@@ -5435,17 +5521,20 @@ static void bitand(char *result,char *bitstrm1,char *bitstrm2)
           *result = '0';
        result++;
     }
+ free(stream);
  *result = '\0';
 }
 
 static void bitor(char *result,char *bitstrm1,char *bitstrm2)
 {
- int i, l1, l2, ldiff;
- char stream[256];
+ int i, l1, l2, ldiff, largestStream;
+ char *stream=0;
  char chr1, chr2;
 
  l1 = strlen(bitstrm1);
  l2 = strlen(bitstrm2);
+ largestStream = (l1 > l2) ? l1 : l2;
+ stream = (char *)malloc(sizeof(char)*(largestStream+1));
  if (l1 < l2)
    {
     ldiff = l2 - l1;
@@ -5475,6 +5564,7 @@ static void bitor(char *result,char *bitstrm1,char *bitstrm2)
           *result = 'x';
        result++;
     }
+ free(stream);
  *result = '\0';
 }
 
@@ -5493,12 +5583,14 @@ static void bitnot(char *result,char *bits)
 
 static char bitcmp(char *bitstrm1, char *bitstrm2)
 {
- int i, l1, l2, ldiff;
- char stream[256];
+ int i, l1, l2, ldiff, largestStream;
+ char *stream=0;
  char chr1, chr2;
 
  l1 = strlen(bitstrm1);
  l2 = strlen(bitstrm2);
+ largestStream = (l1 > l2) ? l1 : l2;
+ stream = (char *)malloc(sizeof(char)*(largestStream+1));
  if (l1 < l2)
    {
     ldiff = l2 - l1;
@@ -5522,8 +5614,12 @@ static char bitcmp(char *bitstrm1, char *bitstrm2)
        chr2 = *(bitstrm2++);
        if ( ((chr1 == '0') && (chr2 == '1'))
 	    || ((chr1 == '1') && (chr2 == '0')) )
+       {
+          free(stream);
 	  return( 0 );
+       }
     }
+ free(stream);
  return( 1 );
 }
 
@@ -5587,6 +5683,42 @@ static char ellipse(double xcen, double ycen, double xrad, double yrad,
  else
    return ( 0 );
 }
+
+/*
+ * Extract substring
+ */
+int cstrmid(char *dest_str, int dest_len,
+	    char *src_str,  int src_len,
+	    int pos)
+{
+  /* char fill_char = ' '; */
+  char fill_char = '\0';
+  if (src_len == 0) { src_len = strlen(src_str); } /* .. if constant */
+
+  /* Fill destination with blanks */
+  if (pos < 0) { 
+    yyerror("STRMID(S,P,N) P must be 0 or greater");
+    return -1;
+  }
+  if (pos > src_len || pos == 0) {
+    /* pos==0: blank string requested */
+    memset(dest_str, fill_char, dest_len);
+  } else if (pos+dest_len > src_len) {
+    /* Copy a subset */
+    int nsub = src_len-pos+1;
+    int npad = dest_len - nsub;
+    memcpy(dest_str, src_str+pos-1, nsub);
+    /* Fill remaining string with blanks */
+    memset(dest_str+nsub, fill_char, npad);
+  } else {
+    /* Full string copy */
+    memcpy(dest_str, src_str+pos-1, dest_len);
+  }
+  dest_str[dest_len] = '\0'; /* Null-terminate */
+
+  return 0;
+}
+
 
 static void yyerror(char *s)
 {

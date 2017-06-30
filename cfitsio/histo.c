@@ -337,7 +337,7 @@ getweight:
         /* creat a float datatype histogram by default, if weight */
         /* factor is not = 1.0  */
 
-        if (defaulttype && *wt != 1.0)
+        if ( (defaulttype && *wt != 1.0) || (defaulttype && *wtname) )
             *imagetype = TFLOAT;
     }
 
@@ -599,6 +599,149 @@ int ffhist2(fitsfile **fptr,  /* IO - pointer to table with X and Y cols;    */
     *fptr = histptr;
 
     return(*status);
+}
+/*--------------------------------------------------------------------------*/
+
+/* ffhist3: same as ffhist2, but does not close the original file */
+/*  and/or replace the original file pointer */
+fitsfile *ffhist3(fitsfile *fptr, /* I - ptr to table with X and Y cols*/
+           char *outfile,    /* I - name for the output histogram file      */
+           int imagetype,    /* I - datatype for image: TINT, TSHORT, etc   */
+           int naxis,        /* I - number of axes in the histogram image   */
+           char colname[4][FLEN_VALUE],   /* I - column names               */
+           double *minin,     /* I - minimum histogram value, for each axis */
+           double *maxin,     /* I - maximum histogram value, for each axis */
+           double *binsizein, /* I - bin size along each axis               */
+           char minname[4][FLEN_VALUE], /* I - optional keywords for min    */
+           char maxname[4][FLEN_VALUE], /* I - optional keywords for max    */
+           char binname[4][FLEN_VALUE], /* I - optional keywords for binsize */
+           double weightin,        /* I - binning weighting factor          */
+           char wtcol[FLEN_VALUE], /* I - optional keyword or col for weight*/
+           int recip,              /* I - use reciprocal of the weight?     */
+           char *selectrow,        /* I - optional array (length = no. of   */
+                             /* rows in the table).  If the element is true */
+                             /* then the corresponding row of the table will*/
+                             /* be included in the histogram, otherwise the */
+                             /* row will be skipped.  Ingnored if *selectrow*/
+                             /* is equal to NULL.                           */
+           int *status)
+{
+    fitsfile *histptr;
+    int   bitpix, colnum[4], wtcolnum;
+    long haxes[4];
+    float amin[4], amax[4], binsize[4],  weight;
+
+    if (*status > 0)
+        return(NULL);
+
+    if (naxis > 4)
+    {
+        ffpmsg("histogram has more than 4 dimensions");
+	*status = BAD_DIMEN;
+        return(NULL);
+    }
+
+    /* reset position to the correct HDU if necessary */
+    if ((fptr)->HDUposition != ((fptr)->Fptr)->curhdu)
+        ffmahd(fptr, ((fptr)->HDUposition) + 1, NULL, status);
+
+    if (imagetype == TBYTE)
+        bitpix = BYTE_IMG;
+    else if (imagetype == TSHORT)
+        bitpix = SHORT_IMG;
+    else if (imagetype == TINT)
+        bitpix = LONG_IMG;
+    else if (imagetype == TFLOAT)
+        bitpix = FLOAT_IMG;
+    else if (imagetype == TDOUBLE)
+        bitpix = DOUBLE_IMG;
+    else{
+        *status = BAD_DATATYPE;
+        return(NULL);
+    }
+    
+    /*    Calculate the binning parameters:    */
+    /*   columm numbers, axes length, min values,  max values, and binsizes.  */
+
+    if (fits_calc_binning(
+      fptr, naxis, colname, minin, maxin, binsizein, minname, maxname, binname,
+      colnum, haxes, amin, amax, binsize, status) > 0)
+    {
+       ffpmsg("failed to determine binning parameters");
+        return(NULL);
+    }
+ 
+    /* get the histogramming weighting factor, if any */
+    if (*wtcol)
+    {
+        /* first, look for a keyword with the weight value */
+        if (fits_read_key(fptr, TFLOAT, wtcol, &weight, NULL, status) )
+        {
+            /* not a keyword, so look for column with this name */
+            *status = 0;
+
+            /* get the column number in the table */
+            if (ffgcno(fptr, CASEINSEN, wtcol, &wtcolnum, status) > 0)
+            {
+               ffpmsg(
+               "keyword or column for histogram weights doesn't exist: ");
+               ffpmsg(wtcol);
+               return(NULL);
+            }
+
+            weight = FLOATNULLVALUE;
+        }
+    }
+    else
+        weight = (float) weightin;
+
+    if (weight <= 0. && weight != FLOATNULLVALUE)
+    {
+        ffpmsg("Illegal histogramming weighting factor <= 0.");
+	*status = URL_PARSE_ERROR;
+        return(NULL);
+    }
+
+    if (recip && weight != FLOATNULLVALUE)
+       /* take reciprocal of weight */
+       weight = (float) (1.0 / weight);
+
+    /* size of histogram is now known, so create temp output file */
+    if (fits_create_file(&histptr, outfile, status) > 0)
+    {
+        ffpmsg("failed to create temp output file for histogram");
+        return(NULL);
+    }
+
+    /* create output FITS image HDU */
+    if (ffcrim(histptr, bitpix, naxis, haxes, status) > 0)
+    {
+        ffpmsg("failed to create output histogram FITS image");
+        return(NULL);
+    }
+
+    /* copy header keywords, converting pixel list WCS keywords to image WCS */
+    if (fits_copy_pixlist2image(fptr, histptr, 9, naxis, colnum, status) > 0)
+    {
+        ffpmsg("failed to copy pixel list keywords to new histogram header");
+        return(NULL);
+    }
+
+    /* if the table columns have no WCS keywords, then write default keywords */
+    fits_write_keys_histo(fptr, histptr, naxis, colnum, status);
+    
+    /* update the WCS keywords for the ref. pixel location, and pixel size */
+    fits_rebin_wcs(histptr, naxis, amin, binsize,  status);      
+    
+    /* now compute the output image by binning the column values */
+    if (fits_make_hist(fptr, histptr, bitpix, naxis, haxes, colnum, amin, amax,
+        binsize, weight, wtcolnum, recip, selectrow, status) > 0)
+    {
+        ffpmsg("failed to calculate new histogram values");
+        return(NULL);
+    }
+              
+    return(histptr);
 }
 /*--------------------------------------------------------------------------*/
 int ffhist(fitsfile **fptr,  /* IO - pointer to table with X and Y cols;    */
@@ -1545,7 +1688,7 @@ int fits_calc_binning(
          if (ffgky(fptr, TDOUBLE, keyname, binsizein + ii, NULL, &tstatus) > 0)
          {
 	    /* make at least 10 bins */
-            binsize[ii] = (amax[ii] - amin[ii]) / 10. ;
+            binsize[ii] = (amax[ii] - amin[ii]) / 10.F ;
             if (binsize[ii] > 1.)
                 binsize[ii] = 1.;  /* use default bin size */
          }
@@ -1865,7 +2008,7 @@ int fits_make_hist(fitsfile *fptr, /* IO - pointer to table with X and Y cols; *
 
     for (ii = 0; ii < naxis; ii++)
     {
-      taxes[ii] = naxes[ii];
+      taxes[ii] = (float) naxes[ii];
       tmin[ii] = amin[ii];
       tmax[ii] = amax[ii];
       if ( (amin[ii] > amax[ii] && binsize[ii] > 0. ) ||
@@ -1874,9 +2017,9 @@ int fits_make_hist(fitsfile *fptr, /* IO - pointer to table with X and Y cols; *
       else
           tbin[ii] =   binsize[ii];  /* binsize has the correct sign */
           
-      imin = tmin[ii];
-      imax = tmax[ii];
-      ibin = tbin[ii];
+      imin = (long) tmin[ii];
+      imax = (long) tmax[ii];
+      ibin = (long) tbin[ii];
     
       /* get the datatype of the column */
       fits_get_coltype(fptr, colnum[ii], &datatype, NULL, NULL, status);
@@ -1889,17 +2032,17 @@ int fits_make_hist(fitsfile *fptr, /* IO - pointer to table with X and Y cols; *
         /* Shift the lower and upper histogramming limits by 0.5, so that */
         /* the values fall in the center of the bin, not on the edge. */
 
-        maxbin[ii] = (taxes[ii] + 1.);  /* add 1. instead of .5 to avoid roundoff */
+        maxbin[ii] = (taxes[ii] + 1.F);  /* add 1. instead of .5 to avoid roundoff */
 
         if (tmin[ii] < tmax[ii])
         {
-          tmin[ii] = tmin[ii] - 0.5;
-          tmax[ii] = tmax[ii] + 0.5;
+          tmin[ii] = tmin[ii] - 0.5F;
+          tmax[ii] = tmax[ii] + 0.5F;
         }
         else
         {
-          tmin[ii] = tmin[ii] + 0.5;
-          tmax[ii] = tmax[ii] - 0.5;
+          tmin[ii] = tmin[ii] + 0.5F;
+          tmax[ii] = tmax[ii] - 0.5F;
         }
       } else {  /* not an integer column with integer limits */
           maxbin[ii] = (tmax[ii] - tmin[ii]) / tbin[ii]; 
@@ -1914,7 +2057,7 @@ int fits_make_hist(fitsfile *fptr, /* IO - pointer to table with X and Y cols; *
     histData.amin1 = tmin[0];
     histData.maxbin1 = maxbin[0];
     histData.binsize1 = tbin[0];
-    histData.haxis1 = taxes[0];
+    histData.haxis1 = (long) taxes[0];
 
     if (histData.haxis > 1)
     {
@@ -1922,7 +2065,7 @@ int fits_make_hist(fitsfile *fptr, /* IO - pointer to table with X and Y cols; *
       histData.amin2 = tmin[1];
       histData.maxbin2 = maxbin[1];
       histData.binsize2 = tbin[1];
-      histData.haxis2 = taxes[1];
+      histData.haxis2 = (long) taxes[1];
 
       if (histData.haxis > 2)
       {
@@ -1930,7 +2073,7 @@ int fits_make_hist(fitsfile *fptr, /* IO - pointer to table with X and Y cols; *
         histData.amin3 = tmin[2];
         histData.maxbin3 = maxbin[2];
         histData.binsize3 = tbin[2];
-        histData.haxis3 = taxes[2];
+        histData.haxis3 = (long) taxes[2];
 
         if (histData.haxis > 3)
         {
@@ -1938,7 +2081,7 @@ int fits_make_hist(fitsfile *fptr, /* IO - pointer to table with X and Y cols; *
           histData.amin4 = tmin[3];
           histData.maxbin4 = maxbin[3];
           histData.binsize4 = tbin[3];
-          histData.haxis4 = taxes[3];
+          histData.haxis4 = (long) taxes[3];
         }
       }
     }
@@ -1949,7 +2092,7 @@ int fits_make_hist(fitsfile *fptr, /* IO - pointer to table with X and Y cols; *
     fits_iter_set_iotype(imagepars, OutputCol);    /* image is output  */
 
     /* call the iterator function to write out the histogram image */
-   fits_iterate_data(n_cols, imagepars, offset, n_per_loop,
+    fits_iterate_data(n_cols, imagepars, offset, n_per_loop,
                           ffwritehisto, (void*)&histData, status);
        
     return(*status);
@@ -2044,8 +2187,14 @@ int ffwritehisto(long totaln, long pixoffset, long firstn, long nvalues,
     }
 
     /* call iterator function to calc the histogram pixel values */
+
+    /* must lock this call in multithreaded environoments because */
+    /* the ffcalchist work routine uses static vaiables that would */
+    /* get clobbered if multiple threads were running at the same time */
+    FFLOCK;
     fits_iterate_data(ncols, colpars, offset, rows_per_loop,
                           ffcalchist, (void*)histData, &status);
+    FFUNLOCK;
 
     return(status);
 }

@@ -614,6 +614,7 @@ CONTAINS
     !     Find an unused I/O unit number for the stellar library.
     status=0
     unit=0
+    !call file_unit(unit)
     call ftgiou(unit, status) 
     if (status .eq. 0) then
        !     Open the stellar library.

@@ -97,9 +97,11 @@ int fffrow( fitsfile *fptr,         /* I - Input FITS file                   */
 
    if( *status ) return( *status );
 
+   FFLOCK;
    if( ffiprs( fptr, 0, expr, MAXDIMS, &Info.datatype, &nelem, &naxis,
                naxes, status ) ) {
       ffcprs();
+      FFUNLOCK;
       return( *status );
    }
    if( nelem<0 ) {
@@ -111,6 +113,7 @@ int fffrow( fitsfile *fptr,         /* I - Input FITS file                   */
    if( Info.datatype!=TLOGICAL || nelem!=1 ) {
       ffcprs();
       ffpmsg("Expression does not evaluate to a logical scalar.");
+      FFUNLOCK;
       return( *status = PARSE_BAD_TYPE );
    }
 
@@ -149,6 +152,7 @@ int fffrow( fitsfile *fptr,         /* I - Input FITS file                   */
    }
 
    ffcprs();
+   FFUNLOCK;
    return(*status);
 }
 
@@ -179,9 +183,11 @@ int ffsrow( fitsfile *infptr,   /* I - Input FITS file                      */
 
    if( *status ) return( *status );
 
+   FFLOCK;
    if( ffiprs( infptr, 0, expr, MAXDIMS, &Info.datatype, &nelem, &naxis,
                naxes, status ) ) {
       ffcprs();
+      FFUNLOCK;
       return( *status );
    }
 
@@ -198,6 +204,7 @@ int ffsrow( fitsfile *infptr,   /* I - Input FITS file                      */
    if( Info.datatype!=TLOGICAL || nelem!=1 ) {
       ffcprs();
       ffpmsg("Expression does not evaluate to a logical scalar.");
+      FFUNLOCK;
       return( *status = PARSE_BAD_TYPE );
    }
 
@@ -209,6 +216,7 @@ int ffsrow( fitsfile *infptr,   /* I - Input FITS file                      */
       ffmahd( infptr, (infptr->HDUposition) + 1, NULL, status );
    if( *status ) {
       ffcprs();
+      FFUNLOCK;
       return( *status );
    }
    inExt.rowLength = (long) (infptr->Fptr)->rowlength;
@@ -216,6 +224,7 @@ int ffsrow( fitsfile *infptr,   /* I - Input FITS file                      */
    inExt.heapSize  = (infptr->Fptr)->heapsize;
    if( inExt.numRows == 0 ) { /* Nothing to copy */
       ffcprs();
+      FFUNLOCK;
       return( *status );
    }
 
@@ -225,6 +234,7 @@ int ffsrow( fitsfile *infptr,   /* I - Input FITS file                      */
       ffrdef( outfptr, status );
    if( *status ) {
       ffcprs();
+      FFUNLOCK;
       return( *status );
    }
    outExt.rowLength = (long) (outfptr->Fptr)->rowlength;
@@ -236,6 +246,7 @@ int ffsrow( fitsfile *infptr,   /* I - Input FITS file                      */
    if( inExt.rowLength != outExt.rowLength ) {
       ffpmsg("Output table has different row length from input");
       ffcprs();
+      FFUNLOCK;
       return( *status = PARSE_BAD_OUTPUT );
    }
 
@@ -249,6 +260,7 @@ int ffsrow( fitsfile *infptr,   /* I - Input FITS file                      */
    if( !Info.dataPtr ) {
       ffpmsg("Unable to allocate memory for row selection");
       ffcprs();
+      FFUNLOCK;
       return( *status = MEMORY_ALLOCATION );
    }
    
@@ -279,6 +291,7 @@ int ffsrow( fitsfile *infptr,   /* I - Input FITS file                      */
       buffer = (unsigned char *)malloc(maxvalue(500000,rdlen) * sizeof(char) );
       if( buffer==NULL ) {
          ffcprs();
+         FFUNLOCK;
          return( *status=MEMORY_ALLOCATION );
       }
       maxrows = maxvalue( (500000L/rdlen), 1);
@@ -400,6 +413,7 @@ int ffsrow( fitsfile *infptr,   /* I - Input FITS file                      */
    ffcprs();
 
    ffcmph(outfptr, status);  /* compress heap, deleting any orphaned data */
+   FFUNLOCK;
    return(*status);
 }
 
@@ -428,9 +442,11 @@ int ffcrow( fitsfile *fptr,      /* I - Input FITS file                      */
 
    if( *status ) return( *status );
 
+   FFLOCK;
    if( ffiprs( fptr, 0, expr, MAXDIMS, &Info.datatype, &nelem1, &naxis,
                naxes, status ) ) {
       ffcprs();
+      FFUNLOCK;
       return( *status );
    }
    if( nelem1<0 ) nelem1 = - nelem1;
@@ -438,6 +454,7 @@ int ffcrow( fitsfile *fptr,      /* I - Input FITS file                      */
    if( nelements<nelem1 ) {
       ffcprs();
       ffpmsg("Array not large enough to hold at least one row of data.");
+      FFUNLOCK;
       return( *status = PARSE_LRG_VECTOR );
    }
 
@@ -455,6 +472,7 @@ int ffcrow( fitsfile *fptr,      /* I - Input FITS file                      */
 
    *anynul = Info.anyNull;
    ffcprs();
+   FFUNLOCK;
    return( *status );
 }
 
@@ -510,10 +528,12 @@ int ffcalc_rng( fitsfile *infptr,   /* I - Input FITS file                  */
 
    if( *status ) return( *status );
 
+   FFLOCK;
    if( ffiprs( infptr, 0, expr, MAXDIMS, &Info.datatype, &nelem, &naxis,
                naxes, status ) ) {
 
       ffcprs();
+      FFUNLOCK;
       return( *status );
    }
    if( nelem<0 ) {
@@ -536,9 +556,17 @@ int ffcalc_rng( fitsfile *infptr,   /* I - Input FITS file                  */
          if( ! constant ) {
             ffcprs();
             ffpmsg( "Cannot put tabular result into keyword (ffcalc)" );
+            FFUNLOCK;
             return( *status = PARSE_BAD_TYPE );
          }
-         parName++;
+         parName++;  /* Advance past '#' */
+	 if ( (fits_strcasecmp(parName,"HISTORY") == 0 || fits_strcasecmp(parName,"COMMENT") == 0) &&
+	      Info.datatype != TSTRING ) {
+            ffcprs();
+            ffpmsg( "HISTORY and COMMENT values must be strings (ffcalc)" );
+	    FFUNLOCK;
+	    return( *status = PARSE_BAD_TYPE );
+	 }
 
       } else if( constant ) {
 
@@ -548,6 +576,7 @@ int ffcalc_rng( fitsfile *infptr,   /* I - Input FITS file                  */
             colNo = -1;
          } else if( *status ) {
             ffcprs();
+            FFUNLOCK;
             return( *status );
          }
 
@@ -578,6 +607,7 @@ int ffcalc_rng( fitsfile *infptr,   /* I - Input FITS file                  */
                case TLOGICAL:
                   ffcprs();
                   ffpmsg("Cannot create LOGICAL column in ASCII table");
+                  FFUNLOCK;
                   return( *status = NOT_BTABLE );
                case TLONG:     strcpy(tform,"I11");     break;
                case TDOUBLE:   strcpy(tform,"D23.15");  break;
@@ -631,6 +661,7 @@ int ffcalc_rng( fitsfile *infptr,   /* I - Input FITS file                  */
 
    } else if( *status ) {
       ffcprs();
+      FFUNLOCK;
       return( *status );
    } else {
 
@@ -655,6 +686,7 @@ int ffcalc_rng( fitsfile *infptr,   /* I - Input FITS file                  */
          /*  Either some other error happened in ffgcrd   */
          /*  or one happened in ffptdm                    */
          ffcprs();
+         FFUNLOCK;
          return( *status );
       }
 
@@ -677,6 +709,7 @@ int ffcalc_rng( fitsfile *infptr,   /* I - Input FITS file                  */
       col_cnt = gParse.nCols;
       if( allocateCol( col_cnt, status ) ) {
          ffcprs();
+         FFUNLOCK;
          return( *status );
       }
 
@@ -707,6 +740,7 @@ int ffcalc_rng( fitsfile *infptr,   /* I - Input FITS file                  */
             *status = 0;
          else if( *status ) {
             ffcprs();
+            FFUNLOCK;
             return( *status );
          }
          if( Info.anyNull ) anyNull = 1;
@@ -734,12 +768,19 @@ int ffcalc_rng( fitsfile *infptr,   /* I - Input FITS file                  */
          break;
       case TBIT:
       case TSTRING:
-         ffukys( outfptr, parName, result->value.data.str, parInfo, status );
+	 if (fits_strcasecmp(parName,"HISTORY") == 0) {
+	   ffphis( outfptr, result->value.data.str, status);
+	 } else if (fits_strcasecmp(parName,"COMMENT") == 0) {
+	   ffpcom( outfptr, result->value.data.str, status);
+	 } else {
+	   ffukys( outfptr, parName, result->value.data.str, parInfo, status );
+	 }
          break;
       }
    }
 
    ffcprs();
+   FFUNLOCK;
    return( *status );
 }
 
@@ -756,8 +797,10 @@ int fftexp( fitsfile *fptr,      /* I - Input FITS file                     */
 /* Evaluate the given expression and return information on the result.      */
 /*--------------------------------------------------------------------------*/
 {
+   FFLOCK;
    ffiprs( fptr, 0, expr, maxdim, datatype, nelem, naxis, naxes, status );
    ffcprs();
+   FFUNLOCK;
    return( *status );
 }
 
@@ -1018,8 +1061,10 @@ int parse_data( long    totalrows,     /* I - Total rows to be processed     */
              }
           }
           repeat = outcol->repeat;
+/*
           if (DEBUG_PIXFILTER)
             printf("parse_data: using null value %ld\n", jnull);
+*/
        } else {
 
           Data = userInfo->dataPtr;
@@ -1059,9 +1104,10 @@ int parse_data( long    totalrows,     /* I - Total rows to be processed     */
 
     /*  If writing to output column, set first element to appropriate  */
     /*  null value.  If no NULLs encounter, zero out before returning. */
+/*
           if (DEBUG_PIXFILTER)
             printf("parse_data: using null value %ld\n", jnull);
-
+*/
 
     if( userInfo->dataPtr == NULL ) {
        /* First, reset Data pointer to start of output array */
@@ -1989,7 +2035,7 @@ int uncompress_hkdata( fitsfile *fptr,
                   sPtr, &anynul, status ) ) return( *status );
       parNo = gParse.nCols;
       while( parNo-- )
-         if( !strcasecmp( parName, gParse.varData[parNo].name ) ) break;
+         if( !fits_strcasecmp( parName, gParse.varData[parNo].name ) ) break;
 
       if( parNo>=0 ) {
          found[parNo] = 1; /* Flag this parameter as found */
@@ -2050,9 +2096,11 @@ int ffffrw( fitsfile *fptr,         /* I - Input FITS file                   */
 
    if( *status ) return( *status );
 
+   FFLOCK;
    if( ffiprs( fptr, 0, expr, MAXDIMS, &dtype, &nelem, &naxis,
                naxes, status ) ) {
       ffcprs();
+      FFUNLOCK;
       return( *status );
    }
    if( nelem<0 ) {
@@ -2064,6 +2112,7 @@ int ffffrw( fitsfile *fptr,         /* I - Input FITS file                   */
    if( dtype!=TLOGICAL || nelem!=1 ) {
       ffcprs();
       ffpmsg("Expression does not evaluate to a logical scalar.");
+      FFUNLOCK;
       return( *status = PARSE_BAD_TYPE );
    }
 
@@ -2083,6 +2132,7 @@ int ffffrw( fitsfile *fptr,         /* I - Input FITS file                   */
    }
 
    ffcprs();
+   FFUNLOCK;
    return(*status);
 }
 
@@ -2217,7 +2267,7 @@ if (gParse.hdutype == IMAGE_HDU) {
 
    colnum = -1;
    for (i = 0; i < gParse.pixFilter->count; ++i) {
-      if (!strcasecmp(colName, gParse.pixFilter->tag[i]))
+      if (!fits_strcasecmp(colName, gParse.pixFilter->tag[i]))
          colnum = i;
    }
    if (colnum < 0) {
@@ -2339,6 +2389,13 @@ if (gParse.hdutype != IMAGE_HDU) {
       varInfo->type     = STRING;
       colIter->datatype = TSTRING;
       type = SCOLUMN;
+      if ( width >= MAX_STRLEN ) {
+	sprintf(temp, "column %d is wider than maximum %d characters",
+		colnum, MAX_STRLEN-1);
+        ffpmsg(temp);
+	gParse.status = PARSE_LRG_VECTOR;
+	return pERROR;
+      }
       if( gParse.hdutype == ASCII_TBL ) repeat = width;
       break;
    default:
@@ -2553,6 +2610,7 @@ int fits_pixel_filter (PixelFilter * filter, int * status)
    if (*status)
       return (*status);
 
+   FFLOCK;
    if (!filter->tag || !filter->tag[0] || !filter->tag[0][0]) {
       filter->tag = DEFAULT_TAGS;
       if (DEBUG_PIXFILTER)
@@ -2776,5 +2834,6 @@ int fits_pixel_filter (PixelFilter * filter, int * status)
 
 CLEANUP:
    ffcprs();
+   FFUNLOCK;
    return (*status);
 }

@@ -162,7 +162,7 @@ Baltimore MD 21218 USA              ¦ http://faxafloi.stsci.edu:4547/
 #include <string.h>
 #include <stdlib.h>
 
-#if defined(unix) || defined(__unix__)  || defined(__unix)
+#if defined(unix) || defined(__unix__)  || defined(__unix) || defined(HAVE_UNISTD_H)
 #include <unistd.h>  
 #endif
 
@@ -231,6 +231,7 @@ static int ftp_open_network(char *url, FILE **ftpfile, FILE **command,
 static int root_send_buffer(int sock, int op, char *buffer, int buflen);
 static int root_recv_buffer(int sock, int *op, char *buffer,int buflen);
 static int root_openfile(char *filename, char *rwmode, int *sock);
+static int encode64(unsigned s_len, char *src, unsigned d_len, char *dst);
 
 /***************************/
 /* Static variables */
@@ -750,12 +751,15 @@ static int http_open_network(char *url, FILE **httpfile, char *contentencoding,
   char recbuf[MAXLEN];
   char tmpstr[MAXLEN];
   char tmpstr1[SHORTLEN];
+  char tmpstr2[MAXLEN];
   char errorstr[MAXLEN];
   char proto[SHORTLEN];
   char host[SHORTLEN];
+  char userpass[MAXLEN];
   char fn[MAXLEN];
   char turl[MAXLEN];
   char *scratchstr;
+  char *saveptr;
   int port;
   float version;
 
@@ -773,6 +777,13 @@ static int http_open_network(char *url, FILE **httpfile, char *contentencoding,
     ffpmsg(errorstr);
     return (FILE_NOT_OPENED);
   }
+
+  /* Do we have a user:password combo ? */
+    strcpy(userpass, url);
+  if ((scratchstr = strchr(userpass, '@')) != NULL) {
+    *scratchstr = '\0';
+  } else
+    strcpy(userpass, "");
 
   /* Ph. Prugniel 2003/04/03
      Are we using a proxy?
@@ -820,6 +831,16 @@ static int http_open_network(char *url, FILE **httpfile, char *contentencoding,
   else
     sprintf(tmpstr,"GET %s HTTP/1.0\r\n",fn);
 
+  if (strcmp(userpass, "")) {
+    encode64(strlen(userpass), userpass, MAXLEN, tmpstr2);
+    sprintf(tmpstr1, "Authorization: Basic %s\r\n", tmpstr2);
+
+    if (strlen(tmpstr) + strlen(tmpstr1) > MAXLEN - 1)
+        return (FILE_NOT_OPENED);
+
+    strcat(tmpstr,tmpstr1);
+  }
+
   sprintf(tmpstr1,"User-Agent: HEASARC/CFITSIO/%-8.3f\r\n",ffvers(&version));
 
   if (strlen(tmpstr) + strlen(tmpstr1) > MAXLEN - 1)
@@ -866,7 +887,7 @@ static int http_open_network(char *url, FILE **httpfile, char *contentencoding,
 	  /* Ok, we found the beginning of the anchor */
 	  scratchstr += 9; /* skip the <A HREF=" bits */
 	  scratchstr += 7; /* skip http://, we die if it's really ftp:// */
-	  strcpy(turl,strtok(scratchstr,"\""));
+	  strcpy(turl,ffstrtok(scratchstr,"\"",&saveptr));
 	  sprintf(errorstr,"to %s\n",turl);
 	  ffpmsg(errorstr);
 	  fclose (*httpfile);
@@ -1427,6 +1448,7 @@ int ftp_open_network(char *filename, FILE **ftpfile, FILE **command, int *sock)
   char *newfn;
   char *passive;
   char *tstr;
+  char *saveptr;
   char ip[SHORTLEN];
   char turl[MAXLEN];
   int port;
@@ -1582,7 +1604,7 @@ int ftp_open_network(char *filename, FILE **ftpfile, FILE **command, int *sock)
       
     /* Messy parsing of response from PASV *command */
     
-    if (!(tstr = strtok(passive,",)"))) {
+    if (!(tstr = ffstrtok(passive,",)",&saveptr))) {
       ffpmsg ("PASV error (ftp_open)");
       fclose(*command);
       return (FILE_NOT_OPENED);
@@ -1590,7 +1612,7 @@ int ftp_open_network(char *filename, FILE **ftpfile, FILE **command, int *sock)
     strcpy(ip,tstr);
     strcat(ip,".");
     
-    if (!(tstr = strtok(NULL,",)"))) {
+    if (!(tstr = ffstrtok(NULL,",)",&saveptr))) {
       ffpmsg ("PASV error (ftp_open)");
       fclose(*command);
       return (FILE_NOT_OPENED);
@@ -1598,7 +1620,7 @@ int ftp_open_network(char *filename, FILE **ftpfile, FILE **command, int *sock)
     strcat(ip,tstr);
     strcat(ip,".");
     
-    if (!(tstr = strtok(NULL,",)"))) {
+    if (!(tstr = ffstrtok(NULL,",)",&saveptr))) {
       ffpmsg ("PASV error (ftp_open)");
       fclose(*command);
       return (FILE_NOT_OPENED);
@@ -1606,7 +1628,7 @@ int ftp_open_network(char *filename, FILE **ftpfile, FILE **command, int *sock)
     strcat(ip,tstr);
     strcat(ip,".");
     
-    if (!(tstr = strtok(NULL,",)"))) {
+    if (!(tstr = ffstrtok(NULL,",)",&saveptr))) {
       ffpmsg ("PASV error (ftp_open)");
       fclose(*command);
       return (FILE_NOT_OPENED);
@@ -1614,7 +1636,7 @@ int ftp_open_network(char *filename, FILE **ftpfile, FILE **command, int *sock)
     strcat(ip,tstr);
     
     /* Done the ip number, now do the port # */
-    if (!(tstr = strtok(NULL,",)"))) {
+    if (!(tstr = ffstrtok(NULL,",)",&saveptr))) {
       ffpmsg ("PASV error (ftp_open)");
       fclose(*command);
       return (FILE_NOT_OPENED);
@@ -1622,7 +1644,7 @@ int ftp_open_network(char *filename, FILE **ftpfile, FILE **command, int *sock)
     sscanf(tstr,"%d",&port);
     port *= 256;
     
-    if (!(tstr = strtok(NULL,",)"))) {
+    if (!(tstr = ffstrtok(NULL,",)",&saveptr))) {
       ffpmsg ("PASV error (ftp_open)");
       fclose(*command);
       return (FILE_NOT_OPENED);
@@ -1659,7 +1681,7 @@ int ftp_open_network(char *filename, FILE **ftpfile, FILE **command, int *sock)
     puts("Sent RETR command");
 #endif
     if (ftp_status(*command,"150 ")) {
-      ffpmsg ("RETR error, most likely file is not there (ftp_open)");
+    /*  ffpmsg ("RETR error, most likely file is not there (ftp_open)"); */
       fclose(*command);
 #ifdef DEBUG
       puts("File not there");
@@ -1852,6 +1874,11 @@ static int NET_ParseUrl(const char *url, char *proto, char *host, int *port,
   }
   /* do this only if http */
   if (!strcmp(proto,"http:")) {
+
+    /* Move past any user:password */
+    if ((thost = strchr(urlcopy, '@')) != NULL)
+      urlcopy = thost+1;
+
     strcpy(host,urlcopy);
     thost = host;
     while (*urlcopy != '/' && *urlcopy != ':' && *urlcopy) {
@@ -2659,4 +2686,58 @@ static int root_recv_buffer(int sock, int *op, char *buffer, int buflen)
   return recv1;
 
 }
+
+/*****************************************************************************/
+/*
+  Encode a string into MIME Base64 format string
+*/
+
+
+static int encode64(unsigned s_len, char *src, unsigned d_len, char *dst) {
+
+  static char base64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+"abcdefghijklmnopqrstuvwxyz"
+"0123456789"
+"+/";
+
+  unsigned triad;
+
+
+  for (triad = 0; triad < s_len; triad += 3) {
+    unsigned long int sr;
+    unsigned byte;
+
+    for (byte = 0; (byte<3) && (triad+byte<s_len); ++byte) {
+      sr <<= 8;
+      sr |= (*(src+triad+byte) & 0xff);
+    }
+
+    /* shift left to next 6 bit alignment*/
+    sr <<= (6-((8*byte)%6))%6;
+
+    if (d_len < 4)
+      return 1;
+
+    *(dst+0) = *(dst+1) = *(dst+2) = *(dst+3) = '=';
+    switch(byte) {
+    case 3:
+      *(dst+3) = base64[sr&0x3f];
+      sr >>= 6;
+    case 2:
+      *(dst+2) = base64[sr&0x3f];
+      sr >>= 6;
+    case 1:
+      *(dst+1) = base64[sr&0x3f];
+      sr >>= 6;
+      *(dst+0) = base64[sr&0x3f];
+    }
+    dst += 4;
+    d_len -= 4;
+  }
+
+  *dst = '\0';
+  return 0;
+}
+
+
 #endif

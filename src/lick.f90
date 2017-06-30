@@ -17,7 +17,7 @@ program lick
   integer nlines
   character(len=10) :: iindices(nmaxlick),uniindice
   double precision Lambda(nmaxlambda),Flux(nmaxlambda)
-  double precision Lambdalines(nmaxlambda),Fluxlines(nmaxlambda)
+  double precision Lambdalines(nmaxlines),Fluxlines(nmaxlines)
   double precision unindex,Flux_res(nmaxlambda),lesindex(nmaxlick)
   character(len=280) ::     nom_spectra_in,nom_ind
   integer           nargs,unitindex,indicesunits(nmaxlick)
@@ -88,14 +88,16 @@ program lick
 
            do j=1,ntimes
               print*, 'timestep = ',j,'/',ntimes
-              call read_spectra_fits_lick(Lfits,j,Lambda,nlambda,Flux,&
-                               Lambdalines,nlines,Fluxlines)
+              !print*, Lfits, j, nlambda, nlines
+              call read_spectra_fits_lick(Lfits,j,Lambda,nlambda,Flux,& 
+                               Lambdalines,nlines,Fluxlines)   ! used to  HERE because of one_real not being dp!!!!!
 
               delta=Lambda(int(nlambda/2)+1)-Lambda(int(nlambda/2))
 
               do k=1,nlambda
                  Fluxout(k)=Flux(k)
               enddo
+              print*, 'FWHM=',FWHM
               if (FWHM.gt.3.*delta) then
                  call addlines(nlambda,Lambda,Flux,nlines,&
                                      Lambdalines,&
@@ -112,11 +114,15 @@ program lick
               endif
 
               call reduce_res_lick(Lambda,nlambda,Fluxout,Flux_res)
-
+              !print*, Lambda(1:nlambda)
+              !print*, Flux_res(1:nlambda)
+              !write(*,*) 'nindex=',nindex
+              print*, 'FWHM=',FWHM
               do k=1,nindex
                  error=0
                  call Lickindex(Lambda,nlambda,Flux_res,&
                                      nom_ind,k,uniindice,unitindex,unindex,error)
+                 print*, unindex
                  iindices(k)=uniindice
                  indicesunits(k)=unitindex
                  if (error.ne.0) then
@@ -131,10 +137,13 @@ program lick
                     lesindex(k)=unindex
                  endif
               enddo
+              print*, 'FWHM=',FWHM
               call fits_lick_w(Lfits,j,ntimes,lesindex,&
                                iindices,indicesunits,nindex,FWHM)
            enddo
-           call fits_spec_close(Lfits,istat)
+           !call fits_spec_close(Lfits,istat)
+            call ftclos(Lfits,istat)
+
         endif
 
         !     ending if command line argument
@@ -155,8 +164,8 @@ subroutine addlines(nlambda,Lambda,Flux,nlines,Lambdalines,&
 
 
   integer                nlambda,nlines
-  double precision       Flux(nmaxlambda),Fluxlines(nmaxlambda)
-  double precision       Lambda(nmaxlambda),Lambdalines(nmaxlambda)
+  double precision       Flux(nmaxlambda),Fluxlines(nmaxlines)
+  double precision       Lambda(nmaxlambda),Lambdalines(nmaxlines)
   double precision       FWHM,sigma,delta
   double precision       Fluxout(nmaxlambda),gaussi
   integer                i,j,k,ileft,icenter,iright
@@ -210,7 +219,7 @@ end subroutine addlines
 subroutine fits_spec_open_rw_lick(filename,Lfits,nw,nwl,nt,resol,istat)
 
   use util
-  use fits_spec_io
+  !use fits_spec_io
 
   implicit none
 
@@ -223,8 +232,9 @@ subroutine fits_spec_open_rw_lick(filename,Lfits,nw,nwl,nt,resol,istat)
   character(len=80) ::  comment
 
   istat=0
-  !call ftgiou(Lfits,istat)
-  call file_unit(Lfits)
+  call ftgiou(Lfits,istat)
+  !call file_unit(Lfits)
+
   call ftopen(Lfits,filename,1,blocksize,istat) !rwmode=1?
   call ftgknj(Lfits,'NAXIS',1,2,naxes,nfound,istat)     !size of the image.
   if (nfound .ne. 2)then
@@ -253,7 +263,6 @@ subroutine fits_spec_open_rw_lick(filename,Lfits,nw,nwl,nt,resol,istat)
      nwl=naxes(2)
   endif
 
-
 end subroutine fits_spec_open_rw_lick
 !     **************************************************
 subroutine fits_lick_w(Lfits,itime,ntimes,indices,iindices,&
@@ -262,7 +271,6 @@ subroutine fits_lick_w(Lfits,itime,ntimes,indices,iindices,&
   use types
   use constants
   use util
-  use fits_spec_io
 
   implicit none
 
@@ -272,11 +280,12 @@ subroutine fits_lick_w(Lfits,itime,ntimes,indices,iindices,&
   character(len=16) ::   tform(nmaxlick)
   character(len=16) ::   tunit(nmaxlick)
   double precision  ::  indices(nmaxlick)
-  real(DP) ::          unindice
+  real ::          unindice
   character(len=*) :: iindices(nmaxlick)
   integer       indicesunits(nmaxlick)
-  double precision FWHM
+  real(DP) :: FWHM
 
+  print*, 'FWHM in', FWHM
   istat=0
   !     move to the HDU called ETS_LICK
   call ftmnhd(Lfits, 2, 'ETS_LICK', 0, istat) 
@@ -292,7 +301,7 @@ subroutine fits_lick_w(Lfits,itime,ntimes,indices,iindices,&
      endif
 
      istat=0
-     do i=1,nindices
+     do i=1,nindices        
         untype=iindices(i)
         ttype(i)=untype     !nom du champ
         tform(i)='1E'       !format
@@ -302,10 +311,12 @@ subroutine fits_lick_w(Lfits,itime,ntimes,indices,iindices,&
            tunit(i)='mag'   !unite
         endif
      enddo
+     print*, 'HELLOOOOOO ?????'
      call ftmahd(Lfits,3,hdutype,istat) ! move to  HDU #3
      call ftibin(Lfits,ntimes,nindices,ttype,tform,tunit,&
           'ETS_LICK',0, istat) !create binary extension
-     call ftpkyf(Lfits,'FWHM',FWHM,2,'FWHM (in 0.1nm)'&
+     print*, 'FWHM final=',FWHM
+     call ftpkyf(Lfits,'FWHM',real(FWHM),3,'FWHM (in 0.1nm)'&
           //' used for the emission lines',istat)
      if (istat.ne.0) write(*,*) 'ERREUR : istat=',istat
   endif
@@ -313,6 +324,7 @@ subroutine fits_lick_w(Lfits,itime,ntimes,indices,iindices,&
   !     write indices for step itime
   do i=1,nindices
      unindice=indices(i)
+     !print*, 'unindice=',unindice,i,itime
      call ftpcne(Lfits, i,itime, 1, 1,unindice,-999., istat)
      if (istat.ne.0) write(*,*) 'istat!',istat
   enddo
@@ -382,8 +394,8 @@ subroutine reduce_res_lick(Lambda,nlambda,Flux,Flux_red)
      if (sigma/10.d0.le.0.2d0) then
         delta=sigma/10.d0   ! echantillonnage = min (0.2 A, sigma/10)
         lambda0=Lambda(i)-maxsigma
-        if (i-100*(i/100).eq.0) write(*,*) 'L,nadd',i,&
-                   int((maxsigma/delta))
+        !if (i-100*(i/100).eq.0) write(*,*) 'L,nadd',i,&
+        !           int((maxsigma/delta))
         do j=-int((maxsigma/delta)),int((maxsigma/delta))
            call interp_lambda_flux(Lambda,nlambda,&
                          Flux,Lambda(i)+delta*j,fluxj)
@@ -462,46 +474,6 @@ subroutine interp_lambda_flux(Lambda,nlambda,&
 end subroutine interp_lambda_flux
 
 !     **************************************************
-subroutine read_spectra_fits_lick(Lfits,iage,Lambda,nlambda,&
-     Flux,Lambdalines,nlines,Fluxlines)
-  !     Reads a pegase FITS spectrum      
-
-  use types
-  use constants
-  use fits_spec_io
-
-  implicit none
-
-
-  integer             iage,nlambda,istat,nlines
-  double precision    Lambda(nmaxlambda),Lambdalines(nmaxlambda),&
-       Flux(nmaxlambda),Fluxlines(nmaxlambda)
-  integer             Lfits
-
-  call fits_spec_wave_read(Lfits,nlambda,Lambda,istat) 
-  if (istat.ne.0) then
-     write(*,*)'Lick: could not get cnt wavelengths in ETS file'
-     stop
-  endif
-  call fits_spec_cont_r(Lfits,nlambda,iage,Flux,istat)
-  if (istat.ne.0) then
-     write(*,*)'Lick: err2'
-     stop
-  endif
-
-  !     read lines 
-  call fits_spec_wavl_read(Lfits,nlines,Lambdalines,istat)
-  if (istat.ne.0) then
-     write(*,*)'Lick: could not get line wavelengths in ETS file'
-     write(*,*) 'istat=',istat
-     stop
-  endif
-  call fits_spec_line_r(Lfits,nlines,iage,Fluxlines,istat)
-  if (istat.ne.0) then
-     write(*,*)'Lick: err3'
-     stop
-  endif
-end subroutine read_spectra_fits_lick
 !     **************************************************
 subroutine read_spectra_ascii(fichier,iage,Lambda,nlambda,Flux)
   !     Reads a pegase ASCII spectrum      
@@ -514,8 +486,8 @@ subroutine read_spectra_ascii(fichier,iage,Lambda,nlambda,Flux)
 
   character(len=280) ::        fichier,header
   integer             iage,nlambda,ntimes,nlines,i,j
-  double precision    Lambda(nmaxlambda),Lambdalines(nmaxlambda),&
-       Flux(nmaxlambda),Fluxlines(nmaxlambda)
+  double precision    Lambda(nmaxlambda),Lambdalines(nmaxlines),&
+       Flux(nmaxlambda),Fluxlines(nmaxlines)
 
 
   open(20,status='old',file=fichier)     

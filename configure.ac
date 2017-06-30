@@ -95,8 +95,9 @@ try_f90flags="\$(FFLAGS)"
 
 ##################################################
 case "${ARCHBIN}" in
-*-darwin*) myopts="-O4 -fopenmp -Wl,-stack_size,0x10000000000" try_fflags="$myopts" ldflags="-O4 -fopenmp -Wl,-stack_size,0x10000000000" ;;
-*-linux*)  myopts="-O4 -fopenmp" try_fflags="$myopts" ldflags="-O4 -fopenmp" ;;
+#*-darwin*) myopts="-O4 -fopenmp -g -C -Wall -Wl,-stack_size,0x10000000000" try_fflags="$myopts" ldflags="$myopts" ;;
+*-darwin*) myopts="-O4 -fopenmp -Wl,-stack_size,0x10000000000 " try_fflags="$myopts" ldflags="$myopts" ;;
+*-linux*)  myopts="-O4 -fopenmp" try_fflags="$myopts" ldflags="$myopts" ;;
 esac
 ##################################################
 

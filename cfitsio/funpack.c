@@ -28,14 +28,14 @@ int main (int argc, char *argv[])
 
 int fu_get_param (int argc, char *argv[], fpstate *fpptr)
 {
-	int	gottype=0, gottile=0, wholetile=0, iarg, len, ndim, ii;
-	char	tmp[SZ_STR], tile[SZ_STR];
+	int	iarg;
+	char	tile[SZ_STR];
 
         if (fpptr->initialized != FP_INIT_MAGIC) {
             fp_msg ("Error: internal initialization error\n"); exit (-1);
         }
 
-	tile[0] = (char) NULL;
+	tile[0] = 0;
 
         /* by default, .fz suffix characters to be deleted from compressed file */
 	fpptr->delete_suffix = 1;
@@ -57,6 +57,12 @@ int fu_get_param (int argc, char *argv[], fpstate *fpptr)
 			fu_usage (); fu_hint (); exit (-1);
 		    } else
 			strncpy (fpptr->prefix, argv[iarg], SZ_STR);
+
+		} else if (argv[iarg][1] == 'E') {
+		    if (++iarg >= argc) {
+			fu_usage (); fu_hint (); exit (-1);
+		    } else
+			strncpy (fpptr->extname, argv[iarg], SZ_STR);
 
 		} else if (argv[iarg][1] == 'S') {
 		    fpptr->to_stdout++;
@@ -94,6 +100,22 @@ int fu_get_param (int argc, char *argv[], fpstate *fpptr)
 	    } else
 		break;
 	}
+	
+	if (fpptr->extname[0] && (fpptr->clobber || fpptr->delete_input)) {
+	    fp_msg ("Error: -E option may not be used with -F or -D\n");
+	    fu_usage (); exit (-1);
+        }
+
+	if (fpptr->to_stdout && (fpptr->outfile[0] || fpptr->prefix[0]) ) {
+
+	    fp_msg ("Error: -S option may not be used with -P or -O\n");
+	    fu_usage (); exit (-1);
+        }
+
+	if (fpptr->outfile[0] && fpptr->prefix[0] ) {
+	    fp_msg ("Error: -P and -O options may not be used together\n");
+	    fu_usage (); exit (-1);
+        }
 
 	if (iarg >= argc) {
 	    fp_msg ("Error: no FITS files to uncompress\n");
@@ -106,7 +128,8 @@ int fu_get_param (int argc, char *argv[], fpstate *fpptr)
 
 int fu_usage (void)
 {
-	fp_msg ("usage: funpack [-F] [-D] [-Z] [-P <pre>] [-O <name>] [-S] [-L] [-C] [-H] [-V] <FITS>\n");
+	fp_msg ("usage: funpack [-E <HDUlist>] [-P <pre>] [-O <name>] [-Z] -v <FITS>\n");
+        fp_msg ("more:   [-F] [-D] [-S] [-L] [-C] [-H] [-V] \n");
 	return(0);
 }
 
@@ -124,20 +147,22 @@ fu_usage ();
 fp_msg ("\n");
 
 fp_msg ("Flags must be separate and appear before filenames:\n");
-fp_msg ("   -v          verbose mode; list each file as it is processed\n");
-fp_msg ("   -F          overwrite input file by output file with same name\n");
-fp_msg ("   -D          delete input file after writing output\n");
-fp_msg ("   -P <pre>    prepend <pre> to create new output filenames\n");
-fp_msg ("   -O <name>   specify full output file name\n");
-fp_msg ("   -S          output uncompressed file to STDOUT\n");
-fp_msg ("   -Z          recompress the output file with host GZIP program\n");
-fp_msg ("   -L          list contents, files unchanged\n");
+fp_msg (" -E <HDUlist> Unpack only the list of HDU names or numbers in the file.\n");
+fp_msg (" -P <pre>    Prepend <pre> to create new output filenames.\n");
+fp_msg (" -O <name>   Specify full output file name.\n");
+fp_msg (" -Z          Recompress the output file with host GZIP program.\n");
+fp_msg (" -F          Overwrite input file by output file with same name.\n");
+fp_msg (" -D          Delete input file after writing output.\n");
+fp_msg (" -S          Output uncompressed file to STDOUT file stream.\n");
+fp_msg (" -L          List contents, files unchanged.\n");
 
-fp_msg ("   -C          don't update FITS checksum keywords\n");
+fp_msg (" -C          Don't update FITS checksum keywords.\n");
 
-fp_msg ("   -H          print this message\n");
-fp_msg ("   -V          print version number\n");
+fp_msg (" -v          Verbose mode; list each file as it is processed.\n");
+fp_msg (" -H          Show this message.\n");
+fp_msg (" -V          Show version number.\n");
 
-fp_msg (" <FITS>        FITS files to unpack\n");
+fp_msg (" \n<FITS>       FITS files to unpack; enter '-' (a hyphen) to read from stdin.\n");
+fp_msg (" Refer to the fpack User's Guide for more extensive help.\n");
 	return(0);
 }
