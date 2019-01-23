@@ -1,7 +1,7 @@
 Package PEGASE-HR, copyright 2004, D. Le Borgne et al.
 
 PEGASE-HR is portable of a wide range of Linux platform.
-It requires a Fortran f77 compiler and the cfitsio library.
+It requires a Fortran f90 compiler and the cfitsio library.
 
 
 This directory is part of the PEGASE-HR distribution, for more information
