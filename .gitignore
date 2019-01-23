@@ -51,3 +51,4 @@ src/*
 !src/*.f90
 src/peg_config.f*
 
+.DS_Store
