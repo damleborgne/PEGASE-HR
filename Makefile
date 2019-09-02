@@ -31,6 +31,7 @@ veryclean :
 	-rm -rf bin/*
 	-rm -f src/peg_config.f90 make.rules make.sys config.log config.status peg_cshrc peg_bashrc configure
 	-rm -rf bin/*
+	-rm -rf data/tests/test_tmp/*
 	-find . -name "*~" -exec rm "{}" \;
 	-find . -name "#*" -exec rm "{}" \;
 

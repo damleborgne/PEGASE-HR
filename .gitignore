@@ -50,5 +50,7 @@ bin/*
 src/*
 !src/*.f90
 src/peg_config.f*
+data/tests/test_tmp/*
+autom4te.cache
 
 .DS_Store
