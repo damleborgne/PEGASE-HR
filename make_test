@@ -15,7 +15,7 @@ rm -rf test_tmp/*
 do_test.tcsh nostop
 
 # copies the computed test files into data/tests/ for reference by future tests
-cp -f test_tmp/test_1.fits ./
-cp -f test_tmp/test_2.fits ./
-cp -f test_tmp/test_ELO.fits ./
+# cp -f test_tmp/test_1.fits ./
+# cp -f test_tmp/test_2.fits ./
+# cp -f test_tmp/test_ELO.fits ./
 
