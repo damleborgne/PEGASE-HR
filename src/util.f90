@@ -211,20 +211,20 @@ CONTAINS
     open(Lun,status='new',file=newfile,iostat=istat)
     !      write(*,*) ' newfile error = ', istat
     if (istat.ne.0) then
-       write(*,*) newfile(1:index(newfile,' ')), 'already existed;'
+       write(*,*) 'Error: ', newfile(1:index(newfile,' ')), 'already existed;'
        do while (istat.ne.0)
           i=index(newfile,' ')
           if(i.gt.0) then
              newfile=newfile(1:i-1)//'+'
              open(Lun,status='new',file=newfile,iostat=istat)
              if (istat.eq.0) then
-                write(*,*) 'a new file named ',&
+                if (verbose.ge.2) write(*,*) 'a new file named ',&
                      newfile(1:index(newfile,' ')),&
                      'has been created.'
-                write(*,*) ' '
+                if (verbose.ge.2) write(*,*) ' '
              endif
           else
-             write(*,*) 'Failed to create a new file'
+             write(*,*) 'Error: Failed to create a new file'
              istat=999
           endif
        end do
@@ -280,7 +280,7 @@ CONTAINS
     end if
 
   end subroutine read_real
-
+  
   !************
 
   subroutine read_char(a,adef,error)

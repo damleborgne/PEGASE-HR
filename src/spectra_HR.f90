@@ -29,7 +29,7 @@ program spectra_HR
   !     READING filenames and basic header information. Very fast.
   !################################################################################
 
-  if (verbose.ge.1) write(*,*) 'Initialization'
+  if (verbose.ge.2) write(*,*) 'Initialization'
   call cpu_time(ti)
 
   !################################################################################
@@ -46,7 +46,7 @@ program spectra_HR
   if(istat.eq.0) then
      if (verbose.ge.2) write(*,*) ' Found file containing scenarios'
   else
-     write(*,*) ' Did not find file containing scenarios. Aborting.'
+     write(*,*) 'Error : Did not find file containing scenarios.'//filescenarios//'. Aborting.'
      stop
   end if
 
@@ -56,7 +56,7 @@ program spectra_HR
   if(istat.eq.0) then
      if (verbose.ge.2) write(*,*) ' Read filenames of input SSP files'
   else
-     write(*,*) ' Read filenames of input SSP files... failed'
+     write(*,*) ' Error: Read filenames of input SSP files... failed'
      stop
   end if
   stellibinfo%filename_short=stellibinfo%filename
@@ -67,7 +67,7 @@ program spectra_HR
   !     "ages.dat"
   call data_time_r(timeinfo,istat)
   if(istat.ne.0) then
-     write(*,*) ' Read output times failed ...'
+     write(*,*) 'Error: Read output times failed ...'
      stop
   else
      if (verbose.ge.2) write(*,*) ' Read output times '
@@ -90,7 +90,7 @@ program spectra_HR
   call scenario_close(istat)
 
   nscenarios=i
-  if (verbose.ge.1) write(*,'(a,i3,a)') 'Finished reading ',nscenarios,' scenarios'
+  if (verbose.ge.2) write(*,'(a,i3,a)') 'Finished reading ',nscenarios,' scenarios'
 
 
   !################################################################################
@@ -104,7 +104,7 @@ program spectra_HR
      if (verbose.ge.2) write(*,*) ' Finished reading needed library spectra '
      if (verbose.ge.2) write(*,*) ' Total number of spectra loaded: ',stellibinfo%nspectot
   else
-     write(*,*)'Failed to open "stellib" file',trim(stellibinfo%filename),istat
+     write(*,*)' Error: Failed to open "stellib" file',trim(stellibinfo%filename),istat
      stop
   endif
 
@@ -131,7 +131,7 @@ program spectra_HR
   SSP%nZ=nmaxZtracks            ! initialize nZ to max possi number
   call ssp_files_read(SSP,stellibinfo%grid_type,istat) 
   if (istat.ne.0) then
-     write(*,*) ' Could not read SSP files ',SSP%nZ,SSP%fileSSPs
+     write(*,*) ' Error: Could not read SSP files ',SSP%nZ,SSP%fileSSPs
      stop
   else
      if (verbose.ge.2) write(*,*) ' Read filenames of input SSP files '
@@ -141,7 +141,7 @@ program spectra_HR
 
   call ssp_head_read(SSP,istat)
   if(istat.ne.0) then
-     write(*,*) ' Read headers of SSP files .. failed'
+     write(*,*) ' Error: Read headers of SSP files .. failed'
      stop
   else
      if (verbose.ge.2) write(*,*) ' Read headers of SSP files '
@@ -154,7 +154,7 @@ program spectra_HR
   call ssp_data_read(SSP,istat)
 
   call cpu_time(te)
-  print*, 'Initializations (seconds) = ',te-ti
+  if (verbose.ge.2) write(*,*) 'Initializations (seconds) = ',te-ti
   ti=te         
 
 
@@ -182,13 +182,20 @@ program spectra_HR
      !--------------------------------------------------
      call date_and_time(values=vi)
 
+     if (verbose.ge.1) write(*, fmt='(a,i5)', advance="no") '  Computing scenario number',myscen%number
+
      call compute_scen()
 
      call date_and_time(values=ve)
-     print*, 'This scenario took (seconds to compute) = ',&
+     if (verbose.ge.1) write(*,fmt= '(a, f10.3, a)') ', done in ',&
           ((ve(8)+1000.*(ve(7)+60.*ve(6)))-&
-          (vi(8)+1000.*(vi(7)+60.*vi(6))))/1000.
-     vi=ve
+          (vi(8)+1000.*(vi(7)+60.*vi(6))))/1000., ' seconds'
+
+     !if (verbose.ge.2) write(*,*) 'This scenario took (seconds to compute) = ',&
+     !     ((ve(8)+1000.*(ve(7)+60.*ve(6)))-&
+     !     (vi(8)+1000.*(vi(7)+60.*vi(6))))/1000.
+
+      vi=ve
 
 
      !--------------------------------------------------
@@ -198,7 +205,7 @@ program spectra_HR
      call write_spectrum()
 
      call date_and_time(values=ve)
-     print*, 'This scenario took (seconds to write) = ',&
+     if (verbose.ge.2) write(*,*) 'This scenario took (seconds to write) = ',&
           ((ve(8)+1000.*(ve(7)+60.*ve(6)))-&
           (vi(8)+1000.*(vi(7)+60.*vi(6))))/1000.
 

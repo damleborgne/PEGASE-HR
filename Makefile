@@ -34,5 +34,6 @@ veryclean :
 	-rm -rf data/tests/test_tmp/*
 	-find . -name "*~" -exec rm "{}" \;
 	-find . -name "#*" -exec rm "{}" \;
-
+	-cd cfitsio; make clean
+	
 

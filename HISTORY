@@ -16,3 +16,4 @@ Version 1.3.1, 28/6/2017 : Bug fixes
   - fixed logical unit management (mainly in pegase_func.f)
   - set the default compilation flag to -O4 instead of -g -O2
 Version 2.0 28/6/2017 : OPENMP version + F90 compiler and codes
+Version 2.0.1 15/11/2021 : bugfix in fits_spec_io.f90:727 ; ftgcvd needs an array as argument, not scalar, with gfortran10 (-fallow-argument-mismatch added to configure.ac as a "fix")

@@ -30,7 +30,7 @@ MODULE constants
 
   integer, PARAMETER :: strmax         = 280  ! length of filenames strings
 
-  integer, PARAMETER :: verbose        = 2
+  integer, PARAMETER :: verbose        = 1
 
   real, PARAMETER :: Zsol = 0.02
   REAL, PARAMETER :: c = 2.99792458e18 ! in angstrom/s

@@ -63,14 +63,14 @@ CONTAINS
 
     call file_open(SSP%fileSSPs,Lu1,istat)      
     if (istat.ne.0) then
-       write(*,*)'SSP_FILES_READ: Failed to open SSP file'
+       write(*,*)'Error : SSP_FILES_READ: Failed to open SSP file'
        write(*,*) 'istat=',istat
        return
     endif
 
     read(lu1,'(a)',iostat=istat) line
     if (line(:22).ne.'format: PEGASE-HR/SSPs') then
-       write(*,*)'SSP_FILES_READ: SSPs file has uncorrect format'
+       write(*,*)'Error: SSP_FILES_READ: SSPs file has uncorrect format'
        istat=1
        return
     endif
@@ -86,14 +86,14 @@ CONTAINS
           else if (line(:9).eq.'version: ') then
              if (line(10:11).ne.'1 ') then
                 write(*,*)&
-                     'SSP_FILES_READ: SSPs file has uncorrect version'
+                     'Error: SSP_FILES_READ: SSPs file has uncorrect version'
                 istat=1
                 return
              endif
           else if (line(:11).eq.'grid_type: ') then
              if(line(12:).ne.grid_type) then
                 write(*,*)&
-                     'SSP_FILES_READ: SSPs grid_type is uncorrect'
+                     'Error: SSP_FILES_READ: SSPs grid_type is uncorrect'
                 istat=1
                 return
              endif
@@ -103,7 +103,7 @@ CONTAINS
 
     if(headend.ne.1) then
        write(*,*)&
-            'SSP_FILES_READ: SSPs file ended before end of header'
+            'Error: SSP_FILES_READ: SSPs file ended before end of header'
        istat=1
        return
     endif
@@ -132,14 +132,14 @@ CONTAINS
 
        call file_open(SSP%fileSSPZ(i),Lu2,istat)      
        if(istat.ne.0) then
-          print *,'SSP_FILES_READ: Could not open SSP file ',&
+          write(*,*) 'Error: SSP_FILES_READ: Could not open SSP file ',&
                SSP%fileSSPZ(i)
           return
        endif
        read(lu2,'(a)') a
        read(lu2,'(29x,a)') line
        if(line.ne.grid_type) then
-          write(*,*)'SSP_FILES_READ: SSP grid_type is uncorrect'
+          write(*,*)'Error: SSP_FILES_READ: SSP grid_type is uncorrect'
           istat=1
           return
        endif

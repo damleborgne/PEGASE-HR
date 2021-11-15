@@ -67,8 +67,8 @@ CONTAINS
 
     call date_and_time(values=vi)
 
-    if (verbose.ge.1) write(*,*) ' ----------------------------------------'
-    if (verbose.ge.1) write(*,*) '  Scenario number',myscen%number
+    if (verbose.ge.2) write(*,*) ' ----------------------------------------'
+    if (verbose.ge.2) write(*,*) '  Computing scenario number',myscen%number
 
 
     allocate(flux_gal(stellibinfo%nlambda, timeinfo%ntimesimpr))
@@ -87,7 +87,7 @@ CONTAINS
     if (myscen%SFRparam(1).lt.0) then
        call sfr_time(myscen%SFRparam,myscen%fileSFR,galprop%SFR,galprop%ZSFR,istat)
        if (istat.ne.0) then
-          write(*,*)'Could not read SFR file',istat
+          write(*,*)'Error: Could not read SFR file',istat
           stop
        end if
     end if
@@ -95,16 +95,14 @@ CONTAINS
 
     !################################################################################
     !     Convolution of the SSPs with the star formation rate. 
-    !     This loop takes 2.1 seconds. TBO ?
     !################################################################################
     
     if (verbose.ge.2) write(*,*) ' Incrementing properties....'
     ! Here is the CONVOLUTION 20000x20000. About 3 seconds
     call increm_ppties()
-!    if (verbose.ge.2) write(*,*) '..... Done.'
       
     call date_and_time(values=ve)
-    print*, '                                        last step = ',&
+    if (verbose.ge.2) write(*,*)  '                                        last step = ',&
          ((ve(8)+1000.*(ve(7)+60.*ve(6)))-&
          (vi(8)+1000.*(vi(7)+60.*vi(6))))/1000.
     vi=ve
@@ -145,13 +143,13 @@ CONTAINS
     if(istat.eq.0) call data_spitz_r(nSpitzer,taudustSpitzer,ySpitzer,istat)
 
     if(istat.ne.0) then
-       write(*,*) 'Compute nebular continuum & emission ... failed'
+       write(*,*) 'Error: Compute nebular continuum & emission ... failed'
        stop
     else
 !       if (verbose.ge.2) write(*,*) '..... Done.'
     end if
     call date_and_time(values=ve)
-    print*, '                                        last step = ',&
+    if (verbose.ge.2) write(*,*)  '                                        last step = ',&
          ((ve(8)+1000.*(ve(7)+60.*ve(6)))-&
          (vi(8)+1000.*(vi(7)+60.*vi(6))))/1000.
     vi=ve
@@ -162,7 +160,7 @@ CONTAINS
     !################################################################################
 
     !     Convolution of SSP spectra with SFR. Takes 3 seconds. TBO with fft ?
-    if (verbose.ge.2) print*, "Convolving SFR and SSPs"
+    if (verbose.ge.2) write(*,*) "Convolving SFR and SSPs"
 
     call convol_SFR_SSPs(&  ! in pegase_func.f
          ntotused,  &
@@ -172,7 +170,7 @@ CONTAINS
 !    if (verbose.ge.2) print*, "..... Done."
 
     call date_and_time(values=ve)
-    print*, '                                        last step = ',&
+    if (verbose.ge.2) write(*,*)  '                                        last step = ',&
          ((ve(8)+1000.*(ve(7)+60.*ve(6)))-&
          (vi(8)+1000.*(vi(7)+60.*vi(6))))/1000.
     vi=ve
@@ -187,7 +185,7 @@ CONTAINS
 !    if (verbose.ge.2) write(*,*) '..... Done.'
 
     call date_and_time(values=ve)
-    print*, '                                        last step = ',&
+    if (verbose.ge.2) write(*,*)  '                                        last step = ',&
          ((ve(8)+1000.*(ve(7)+60.*ve(6)))-&
          (vi(8)+1000.*(vi(7)+60.*vi(6))))/1000.
     vi=ve
@@ -246,7 +244,7 @@ CONTAINS
     enddo
 
     call date_and_time(values=ve)
-    print*, '                                        last step = ',&
+    if (verbose.ge.2) write(*,*)  '                                        last step = ',&
          ((ve(8)+1000.*(ve(7)+60.*ve(6)))-&
          (vi(8)+1000.*(vi(7)+60.*vi(6))))/1000.
     vi=ve
@@ -371,7 +369,7 @@ CONTAINS
     end do
 
     call date_and_time(values=ve)
-    print*, '                                        last step = ',&
+    if (verbose.ge.2) write(*,*)  '                                        last step = ',&
          ((ve(8)+1000.*(ve(7)+60.*ve(6)))-&
          (vi(8)+1000.*(vi(7)+60.*vi(6))))/1000.
     vi=ve
