@@ -25,7 +25,14 @@ INSTALLATION PROCEDURE
 
   1) Configuration
 
-     Run:
+      ReBuild cfitsio : 
+      > cd cfitsio
+      > autoconf
+      > ./configure
+      > make
+      > cd ..
+      
+     Compile PEGASEHR:
      > autoconf
      > ./configure
      > make
