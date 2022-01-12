@@ -34,8 +34,9 @@ veryclean :
 	-rm -rf data/tests/test_tmp/*
 	-find . -name "*~" -exec rm "{}" \;
 	-find . -name "#*" -exec rm "{}" \;
-	-cd cfitsio; make clean
+	-cd cfitsio; make clean ; rm -rf autom4te.cache
 	
-test:   all
-	@ tcsh -f ${PWD}/data/tests/do_test.tcsh
+test: peg
+	(cd ${PWD}/data/tests/; do_test.tcsh; cd ../..)
+
 

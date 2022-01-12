@@ -48,8 +48,8 @@ Therefore, it will not be possible to install the compiled files...
 fi
 
 
-
-cd cfitsio && ./configure && make && cd ..
+echo "Compiling CFITSIO"
+cd cfitsio && autoconf && ./configure && make && cd ..
 
 AC_SEARCH_LIBS(fabs, m)
 
@@ -95,18 +95,15 @@ try_f90flags="\$(FFLAGS)"
 
 ##################################################
 
+#flag fallow-argument-mismatch?
+GCC_VER_STRING=$(gcc -dumpversion | sed -e 's/\.\(.*\)//g')
+GCC_VER_GE10=`expr $GCC_VER_STRING \>= 10`
+flag_fallow=""
+if test "$GCC_VER_GE10" = "1" ; then flag_fallow='-fallow-argument-mismatch' ; fi
+
 case "${ARCHBIN}" in
-# gfortran 9
-*-darwin*) myopts="-O4 -fopenmp -Wl,-stack_size,0x10000000000 " try_fflags="$myopts" ldflags="$myopts" ;;
-*-linux*)  myopts="-O4 -fopenmp " try_fflags="$myopts" ldflags="$myopts" ;;
-# gfortran 10
-#*-darwin*) myopts="-O4 -fopenmp -fallow-argument-mismatch -Wl,-stack_size,0x10000000000 " try_fflags="$myopts" ldflags="$myopts" ;;
-#*-linux*)  myopts="-O4 -fopenmp -fallow-argument-mismatch" try_fflags="$myopts" ldflags="$myopts" ;;
-
-##*-darwin*) myopts="-O0 -g -C" try_fflags="$myopts" ldflags="$myopts" ;;
-##*-darwin*) myopts="-O2 -g -C -Wall" try_fflags="$myopts" ldflags="$myopts" ;;
-
-*-linux*)  myopts="-O4 -fopenmp -fallow-argument-mismatch" try_fflags="$myopts" ldflags="$myopts" ;;
+*-darwin*) myopts="-O4 -fopenmp $flag_fallow -Wl,-stack_size,0x10000000000 " try_fflags="$myopts" ldflags="$myopts" ;;
+*-linux*)  myopts="-O4 -fopenmp $flag_fallow " try_fflags="$myopts" ldflags="$myopts" ;;
 
 esac
 ##################################################
