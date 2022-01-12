@@ -102,7 +102,8 @@ flag_fallow=""
 if test "$GCC_VER_GE10" = "1" ; then flag_fallow='-fallow-argument-mismatch' ; fi
 
 case "${ARCHBIN}" in
-*-darwin*) myopts="-O4 -fopenmp $flag_fallow -Wl,-stack_size,0x10000000000 " try_fflags="$myopts" ldflags="$myopts" ;;
+#*-darwin*) myopts="-O4 -fopenmp $flag_fallow -Wl,-stack_size,0x10000000000 " try_fflags="$myopts" ldflags="$myopts" ;;
+*-darwin*) myopts="-O4 -fopenmp $flag_fallow -Wl " try_fflags="$myopts" ldflags="$myopts" ;;
 *-linux*)  myopts="-O4 -fopenmp $flag_fallow " try_fflags="$myopts" ldflags="$myopts" ;;
 
 esac
