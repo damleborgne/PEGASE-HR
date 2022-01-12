@@ -25,7 +25,14 @@ INSTALLATION PROCEDURE
 
   1) Configuration
 
-     Run:
+      ReBuild cfitsio : 
+      > cd cfitsio
+      > autoconf
+      > ./configure
+      > make
+      > cd ..
+      
+     Compile PEGASEHR:
      > autoconf
      > ./configure
      > make
@@ -35,7 +42,8 @@ INSTALLATION PROCEDURE
      >  make
      The executables are then located in the bin/ directory.
 
-  3) If necessary run "unlimit" under linux to avoid memory issues
+  3) If necessary (e.g. Segmentation Fault and core dump when running SSPs_HR) : 
+     run "unlimit" under linux to avoid memory issues
 
   4) Test installation
      You can test the installation by running 

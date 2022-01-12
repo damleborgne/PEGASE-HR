@@ -8,6 +8,6 @@
 #-----------------------------------------------------------------------------
 PATH="@PEG_ROOT@/bin/@ARCHBIN@:${PATH}"
 PEG_ROOT="@PEG_ROOT@"
-export $PATH
-export $PEG_ROOT
+export PATH
+export PEG_ROOT
 #-----------------------------------------------------------------------------
