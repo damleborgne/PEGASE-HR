@@ -94,11 +94,12 @@ try_f90flags="\$(FFLAGS)"
 #ldflags="$myopts"
 
 ##################################################
+
 case "${ARCHBIN}" in
 *-darwin*) myopts="-O4 -fopenmp -fallow-argument-mismatch -Wl,-stack_size,0x10000000000 " try_fflags="$myopts" ldflags="$myopts" ;;
+*-linux*)  myopts="-O4 -fopenmp -fallow-argument-mismatch" try_fflags="$myopts" ldflags="$myopts" ;;
 #*-darwin*) myopts="-O0 -g -C" try_fflags="$myopts" ldflags="$myopts" ;;
 #*-darwin*) myopts="-O2 -g -C -Wall" try_fflags="$myopts" ldflags="$myopts" ;;
-*-linux*)  myopts="-O4 -fopenmp -fallow-argument-mismatch" try_fflags="$myopts" ldflags="$myopts" ;;
 esac
 ##################################################
 

@@ -36,4 +36,6 @@ veryclean :
 	-find . -name "#*" -exec rm "{}" \;
 	-cd cfitsio; make clean
 	
+test:   all
+	@ tcsh -f ${PWD}/data/tests/do_test.tcsh
 
