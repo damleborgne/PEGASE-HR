@@ -20,7 +20,7 @@ ar=$AR
 arflags=$ARFLAGS
 
 #archbin=`uname -m`
-ARCHBIN=`config.guess`
+ARCHBIN=`./config.guess`
 echo ARCHBIN is now $ARCHBIN
 
 # Define version by reading the VERSION	file
