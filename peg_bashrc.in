@@ -6,6 +6,8 @@
 # It provides help to use PEGASE-HR.
 # Alternatively, you can execute this file as: . peg_bashrc
 #-----------------------------------------------------------------------------
-PATH="${PATH}:@PEGASE_ROOT@/bin"
-export $PATH
+PATH="@PEG_ROOT@/bin/@ARCHBIN@:${PATH}"
+PEG_ROOT="@PEG_ROOT@"
+export PATH
+export PEG_ROOT
 #-----------------------------------------------------------------------------

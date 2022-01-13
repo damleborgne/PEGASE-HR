@@ -555,7 +555,7 @@ int ffpcnuk(fitsfile *fptr,  /* I - FITS file pointer                       */
 */
 {
     tcolumn *colptr;
-    long  ngood = 0, nbad = 0, ii;
+    LONGLONG  ngood = 0, nbad = 0, ii;
     LONGLONG repeat, first, fstelm, fstrow;
     int tcode, overflow = 0;
 
@@ -958,6 +958,9 @@ int ffuintfstr(unsigned int *input, /* I - array of values to be converted  */
 {
     long ii;
     double dvalue;
+    char *cptr;
+    
+    cptr = output;
 
     if (scale == 1. && zero == 0.)
     {       
@@ -982,5 +985,9 @@ int ffuintfstr(unsigned int *input, /* I - array of values to be converted  */
             *status = OVERFLOW_ERR;
         }
     }
+
+    /* replace any commas with periods (e.g., in French locale) */
+    while ((cptr = strchr(cptr, ','))) *cptr = '.';
+    
     return(*status);
 }

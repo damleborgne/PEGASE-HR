@@ -1,4 +1,4 @@
-SSPs file: ../data/isochrones/Salp_default_SSPs.dat
+SSPs file: ../../isochrones/Salp_default_SSPs.dat
 Fraction of close binary systems: 0.50000E-01
 libstell : stellibLCBcor.fits                                
 ************************************************************

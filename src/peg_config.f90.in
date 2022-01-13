@@ -1,0 +1,5 @@
+! peg_config.f
+! include file containing parameters related to the configuration
+! the file "peg_config.f" is automatically generated from  "peg_config.f.in"
+! by the "make" command.
+  character(len=${PEG_ROOT_LEN}), PARAMETER :: PEG_ROOT='${PEG_ROOT}'

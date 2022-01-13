@@ -44,6 +44,7 @@
  *              express or implied warranty.
  */
 
+#include "fitsio2.h"
 #include <stdio.h>		/* define stderr, FD, and NULL */
 #include <stdlib.h>
 #include <stddef.h>  /* stddef.h is apparently needed to define size_t */
@@ -117,12 +118,12 @@ static int irafgeti4(char *irafheader, int offset);
 static char *irafgetc2(char *irafheader, int offset, int nc);
 static char *irafgetc(char *irafheader,	int offset, int	nc);
 static char *iraf2str(char *irafstring, int nchar);
-static char *irafrdhead(char *filename, int *lihead);
+static char *irafrdhead(const char *filename, int *lihead);
 static int irafrdimage (char **buffptr, size_t *buffsize,
     size_t *filesize, int *status);
 static int iraftofits (char *hdrname, char *irafheader, int nbiraf,
     char **buffptr, size_t *nbfits, size_t *fitssize, int *status);
-static char *same_path(char *pixname, char *hdrname);
+static char *same_path(char *pixname, const char *hdrname);
 
 static int swaphead=0;	/* =1 to swap data bytes of IRAF header values */
 static int swapdata=0;  /* =1 to swap bytes in IRAF data pixels */
@@ -147,11 +148,66 @@ static void hputs(char* hstring,char* keyword,char* cval);
 static void hputcom(char* hstring,char* keyword,char* comment);
 static void hputl(char* hstring,char* keyword,int lval);
 static void hputc(char* hstring,char* keyword,char* cval);
-
+static int getirafpixname (const char *hdrname, char *irafheader, char *pixfilename, int *status);
 int iraf2mem(char *filename, char **buffptr, size_t *buffsize, 
       size_t *filesize, int *status);
 
 void ffpmsg(const char *err_message);
+
+/* CFITS_API is defined below for use on Windows systems.  */
+/* It is used to identify the public functions which should be exported. */
+/* This has no effect on non-windows platforms where "WIN32" is not defined */
+
+/* this is only needed to export the "fits_delete_iraf_file" symbol, which */
+/* is called in fpackutil.c (and perhaps in other applications programs) */
+
+#if defined (WIN32)
+  #if defined(cfitsio_EXPORTS)
+    #define CFITS_API __declspec(dllexport)
+  #else
+    #define CFITS_API //__declspec(dllimport)
+  #endif /* CFITS_API */
+#else /* defined (WIN32) */
+ #define CFITS_API
+#endif
+
+int CFITS_API fits_delete_iraf_file(const char *filename, int *status);
+
+
+/*--------------------------------------------------------------------------*/
+int fits_delete_iraf_file(const char *filename,  /* name of input file      */
+             int *status)                        /* IO - error status       */
+
+/*
+   Delete the iraf .imh header file and the associated .pix data file
+*/
+{
+    char *irafheader;
+    int lenirafhead;
+
+    char pixfilename[SZ_IM2PIXFILE+1];
+
+    /* read IRAF header into dynamically created char array (free it later!) */
+    irafheader = irafrdhead(filename, &lenirafhead);
+
+    if (!irafheader)
+    {
+	return(*status = FILE_NOT_OPENED);
+    }
+
+    getirafpixname (filename, irafheader, pixfilename, status);
+
+    /* don't need the IRAF header any more */
+    free(irafheader);
+
+    if (*status > 0)
+       return(*status);
+
+    remove(filename);
+    remove(pixfilename);
+    
+    return(*status);
+}
 
 /*--------------------------------------------------------------------------*/
 int iraf2mem(char *filename,     /* name of input file                 */
@@ -207,8 +263,8 @@ int iraf2mem(char *filename,     /* name of input file                 */
  */
 
 static char *irafrdhead (
-    char *filename,   /* Name of IRAF header file */
-    int *lihead)     /* Length of IRAF image header in bytes (returned) */
+    const char *filename,  /* Name of IRAF header file */
+    int *lihead)           /* Length of IRAF image header in bytes (returned) */
 {
     FILE *fd;
     int nbr;
@@ -837,6 +893,58 @@ static int iraftofits (
 
     return (*status);
 }
+/*--------------------------------------------------------------------------*/
+
+/* get the IRAF pixel file name */
+
+static int getirafpixname (
+    const char *hdrname,  /* IRAF header file name (may be path) */
+    char    *irafheader,  /* IRAF image header */
+    char    *pixfilename,     /* IRAF pixel file name */
+    int     *status)
+{
+    int imhver;
+    char *pixname, *newpixname, *bang;
+
+    /* Check header magic word */
+    imhver = head_version (irafheader);
+    if (imhver < 1) {
+	ffpmsg("File not valid IRAF image header");
+        ffpmsg(hdrname);
+	return(*status = FILE_NOT_OPENED);
+	}
+
+    /* get image pixel file pathname in header */
+    if (imhver == 2)
+	pixname = irafgetc (irafheader, IM2_PIXFILE, SZ_IM2PIXFILE);
+    else
+	pixname = irafgetc2 (irafheader, IM_PIXFILE, SZ_IMPIXFILE);
+
+    if (strncmp(pixname, "HDR", 3) == 0 ) {
+	newpixname = same_path (pixname, hdrname);
+        if (newpixname) {
+          free (pixname);
+          pixname = newpixname;
+	  }
+	}
+
+    if (strchr (pixname, '/') == NULL && strchr (pixname, '$') == NULL) {
+	newpixname = same_path (pixname, hdrname);
+        if (newpixname) {
+          free (pixname);
+          pixname = newpixname;
+	  }
+	}
+	
+    if ((bang = strchr (pixname, '!')) != NULL )
+	strcpy(pixfilename,bang+1);
+    else
+	strcpy(pixfilename,pixname);
+
+    free (pixname);
+
+    return (*status);
+}
 
 /*--------------------------------------------------------------------------*/
 /* Put filename and header path together */
@@ -844,7 +952,7 @@ static int iraftofits (
 static char *same_path (
 
 char	*pixname,	/* IRAF pixel file pathname */
-char	*hdrname)	/* IRAF image header file pathname */
+const char	*hdrname)	/* IRAF image header file pathname */
 
 {
     int len;
@@ -1296,6 +1404,7 @@ char *keyword0;	/* character string containing the name of the keyword
 	char line[100];
 	char *vpos, *cpar = NULL;
 	char *q1, *q2 = NULL, *v1, *v2, *c1, *brack1, *brack2;
+        char *saveptr;
 	int ipar, i;
 
 	squot[0] = 39;
@@ -1367,7 +1476,7 @@ char *keyword0;	/* character string containing the name of the keyword
 
 /* Extract value and remove excess spaces */
 	if (q1 != NULL) {
-	    v1 = q1 + 1;;
+	    v1 = q1 + 1;
 	    v2 = q2;
 	    c1 = strsrch (q2,"/");
 	    }
@@ -1408,7 +1517,7 @@ char *keyword0;	/* character string containing the name of the keyword
 		cwhite[0] = ' ';
 		cwhite[1] = '\0';
 		for (i = 1; i <= ipar; i++) {
-		    cpar = strtok (v1,cwhite);
+		    cpar = ffstrtok (v1,cwhite,&saveptr);
 		    v1 = NULL;
 		    }
 		if (cpar != NULL) {
