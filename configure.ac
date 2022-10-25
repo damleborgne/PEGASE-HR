@@ -86,10 +86,10 @@ try_f90flags="\$(FFLAGS)"
 
 # fflags : O4 is perfect. O2 is slower. stack_size adjustemnt is needed with openmp (or use allocatable arrays in the code...)
 
-#myopts="-fopenmp -Wl,-stack_size,0x10000000000 -ffree-form -std=f95 -pedantic-errors -Wall -Wconversion -Wimplicit-interface -Wunderflow -Wextra -Wunreachable-code -ffpe-trap=invalid,zero,overflow,underflow -g3 -fbounds-check -O0 -fstack-protector-all -fall-intrinsics"
+#myopts="-fopenmp -Wall,-stack_size,0x10000000000 -ffree-form -std=f95 -pedantic-errors -Wall -Wconversion -Wimplicit-interface -Wunderflow -Wextra -Wunreachable-code -ffpe-trap=invalid,zero,overflow,underflow -g3 -fbounds-check -O0 -fstack-protector-all -fall-intrinsics"
 
-#myopts="-fopenmp -Wl,-stack_size,0x10000000000 -ffree-form  -pedantic-errors -Wconversion -Wunderflow -Wextra -Wunreachable-code -ffpe-trap=invalid,zero,overflow,underflow -g3 -fbounds-check -O0 -fstack-protector-all -fall-intrinsics"
-#myopts="-fopenmp -Wl,-stack_size,0x10000000000"
+#myopts="-fopenmp -Wall,-stack_size,0x10000000000 -ffree-form  -pedantic-errors -Wconversion -Wunderflow -Wextra -Wunreachable-code -ffpe-trap=invalid,zero,overflow,underflow -g3 -fbounds-check -O0 -fstack-protector-all -fall-intrinsics"
+#myopts="-fopenmp -Wall,-stack_size,0x10000000000"
 #try_fflags="$myopts"
 #ldflags="$myopts"
 
@@ -102,8 +102,8 @@ flag_fallow=""
 if test "$GCC_VER_GE10" = "1" ; then flag_fallow='-fallow-argument-mismatch' ; fi
 
 case "${ARCHBIN}" in
-#*-darwin*) myopts="-O4 -fopenmp $flag_fallow -Wl,-stack_size,0x10000000000 " try_fflags="$myopts" ldflags="$myopts" ;;
-*-darwin*) myopts="-O4 -fopenmp $flag_fallow -Wl " try_fflags="$myopts" ldflags="$myopts" ;;
+#*-darwin*) myopts="-O4 -fopenmp $flag_fallow -Wall,-stack_size,0x10000000000 " try_fflags="$myopts" ldflags="$myopts" ;;
+*-darwin*) myopts="-O4 -fopenmp $flag_fallow -Wall " try_fflags="$myopts" ldflags="$myopts" ;;
 *-linux*)  myopts="-O4 -fopenmp $flag_fallow " try_fflags="$myopts" ldflags="$myopts" ;;
 
 esac
@@ -164,6 +164,8 @@ You can set the F90FLAGS environament variable to "-O3 -m64"
 to enable 64 bit mode, and run ./configure again.
 *********************************************************************
 ])
+
+# AC_CONFIG_FILES([Makefile make.sys make.rules peg_cshrc peg_bashrc])
 
 AC_CONFIG_FILES([make.sys make.rules peg_cshrc peg_bashrc])
 rm -rf config.status autom4te.cache && AC_MSG_RESULT(configure: removing ./config.status and autom4te.cache/)
