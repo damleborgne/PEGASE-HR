@@ -172,10 +172,13 @@ Baltimore MD 21218 USA                http://faxafloi.stsci.edu:4547/
 #include <stdlib.h>
 #include <math.h>
 
+<<<<<<< HEAD
 #ifdef CFITSIO_HAVE_CURL
 #include <curl/curl.h>
 #endif
 
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 #if defined(unix) || defined(__unix__)  || defined(__unix) || defined(HAVE_UNISTD_H)
 #include <unistd.h>  
 #endif
@@ -252,11 +255,14 @@ static int root_send_buffer(int sock, int op, char *buffer, int buflen);
 static int root_recv_buffer(int sock, int *op, char *buffer,int buflen);
 static int root_openfile(char *filename, char *rwmode, int *sock);
 static int encode64(unsigned s_len, char *src, unsigned d_len, char *dst);
+<<<<<<< HEAD
 static int ssl_get_with_curl(char *url, curlmembuf* buffer, 
                 char* username, char* password);
 static size_t curlToMemCallback(void *buffer, size_t size, size_t nmemb, void *userp);
 static int curlProgressCallback(void *clientp, double dltotal, double dlnow,
                            double ultotal, double ulnow);
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 /***************************/
 /* Static variables */
@@ -760,7 +766,10 @@ static int http_open_network(char *url, FILE **httpfile, char *contentencoding,
   char fn[MAXLEN];
   char turl[MAXLEN];
   char *scratchstr;
+<<<<<<< HEAD
   char *scratchstr2;
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
   char *saveptr;
   int port;
   float version;
@@ -784,9 +793,14 @@ static int http_open_network(char *url, FILE **httpfile, char *contentencoding,
     strcpy(userpass, url);
   if ((scratchstr = strchr(userpass, '@')) != NULL) {
     *scratchstr = '\0';
+<<<<<<< HEAD
   } else {
     strcpy(userpass, "");
   }
+=======
+  } else
+    strcpy(userpass, "");
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
   /* Ph. Prugniel 2003/04/03
      Are we using a proxy?
@@ -837,7 +851,19 @@ static int http_open_network(char *url, FILE **httpfile, char *contentencoding,
 
   if (strcmp(userpass, "")) {
     encode64(strlen(userpass), userpass, MAXLEN, tmpstr2);
+<<<<<<< HEAD
     snprintf(tmpstr1, SHORTLEN,"Authorization: Basic %s\r\n", tmpstr2);
+=======
+    sprintf(tmpstr1, "Authorization: Basic %s\r\n", tmpstr2);
+
+    if (strlen(tmpstr) + strlen(tmpstr1) > MAXLEN - 1)
+        return (FILE_NOT_OPENED);
+
+    strcat(tmpstr,tmpstr1);
+  }
+
+  sprintf(tmpstr1,"User-Agent: HEASARC/CFITSIO/%-8.3f\r\n",ffvers(&version));
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
     if (strlen(tmpstr) + strlen(tmpstr1) > MAXLEN - 1)
     {
@@ -908,6 +934,7 @@ static int http_open_network(char *url, FILE **httpfile, char *contentencoding,
 
 	scratchstr = strstr(recbuf,"Location: ");
 	if (scratchstr != NULL) {
+<<<<<<< HEAD
 
 	  /* Ok, we found the Location line which gives the redirected URL */
           /* skip the "Location: "  charactrers */
@@ -987,6 +1014,17 @@ static int http_open_network(char *url, FILE **httpfile, char *contentencoding,
              return 0;
           }
           
+=======
+	  /* Ok, we found the beginning of the anchor */
+	  scratchstr += 9; /* skip the <A HREF=" bits */
+	  scratchstr += 7; /* skip http://, we die if it's really ftp:// */
+	  strcpy(turl,ffstrtok(scratchstr,"\"",&saveptr));
+	  sprintf(errorstr,"to %s\n",turl);
+	  ffpmsg(errorstr);
+	  fclose (*httpfile);
+	  return 
+	    http_open_network(turl,httpfile,contentencoding,contentlength);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 	}
       }
 
@@ -3025,55 +3063,91 @@ int ftp_file_exist(char *filename)
     /* Messy parsing of response from PASV command */
     
     if (!(tstr = ffstrtok(passive,",)",&saveptr))) {
+<<<<<<< HEAD
       ffpmsg ("PASV error (ftp_file_exist)");
       fclose(command);
       NET_SendRaw(sock,"QUIT\r\n",6,NET_DEFAULT);
       return 0;
+=======
+      ffpmsg ("PASV error (ftp_open)");
+      fclose(*command);
+      return (FILE_NOT_OPENED);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     }
     strcpy(ip,tstr);
     strcat(ip,".");
     
     if (!(tstr = ffstrtok(NULL,",)",&saveptr))) {
+<<<<<<< HEAD
       ffpmsg ("PASV error (ftp_file_exist)");
       fclose(command);
       NET_SendRaw(sock,"QUIT\r\n",6,NET_DEFAULT);
       return 0;
+=======
+      ffpmsg ("PASV error (ftp_open)");
+      fclose(*command);
+      return (FILE_NOT_OPENED);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     }
     strcat(ip,tstr);
     strcat(ip,".");
     
     if (!(tstr = ffstrtok(NULL,",)",&saveptr))) {
+<<<<<<< HEAD
       ffpmsg ("PASV error (ftp_file_exist)");
       fclose(command);
       NET_SendRaw(sock,"QUIT\r\n",6,NET_DEFAULT);
       return 0;
+=======
+      ffpmsg ("PASV error (ftp_open)");
+      fclose(*command);
+      return (FILE_NOT_OPENED);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     }
     strcat(ip,tstr);
     strcat(ip,".");
     
     if (!(tstr = ffstrtok(NULL,",)",&saveptr))) {
+<<<<<<< HEAD
       ffpmsg ("PASV error (ftp_file_exist)");
       fclose(command);
       NET_SendRaw(sock,"QUIT\r\n",6,NET_DEFAULT);
       return 0;
+=======
+      ffpmsg ("PASV error (ftp_open)");
+      fclose(*command);
+      return (FILE_NOT_OPENED);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     }
     strcat(ip,tstr);
     
     /* Done the ip number, now do the port # */
     if (!(tstr = ffstrtok(NULL,",)",&saveptr))) {
+<<<<<<< HEAD
       ffpmsg ("PASV error (ftp_file_exist)");
       fclose(command);
       NET_SendRaw(sock,"QUIT\r\n",6,NET_DEFAULT);
       return 0;
+=======
+      ffpmsg ("PASV error (ftp_open)");
+      fclose(*command);
+      return (FILE_NOT_OPENED);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     }
     sscanf(tstr,"%d",&port);
     port *= 256;
     
     if (!(tstr = ffstrtok(NULL,",)",&saveptr))) {
+<<<<<<< HEAD
       ffpmsg ("PASV error (ftp_file_exist)");
       fclose(command);
       NET_SendRaw(sock,"QUIT\r\n",6,NET_DEFAULT);
       return 0;
+=======
+      ffpmsg ("PASV error (ftp_open)");
+      fclose(*command);
+      return (FILE_NOT_OPENED);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     }
     sscanf(tstr,"%d",&tmpint);
     port += tmpint;
@@ -3098,12 +3172,25 @@ int ftp_file_exist(char *filename)
     snprintf(tmpstr,MAXLEN,"RETR %s\r\n",newfn);
     status = NET_SendRaw(sock,tmpstr,strlen(tmpstr),NET_DEFAULT);
 
+<<<<<<< HEAD
     if (ftp_status(command,"150 ")) {
       fclose(ftpfile); 
       NET_SendRaw(sock1,"QUIT\r\n",6,NET_DEFAULT);
       fclose(command);
       NET_SendRaw(sock,"QUIT\r\n",6,NET_DEFAULT);
       return 0;
+=======
+#ifdef DEBUG
+    puts("Sent RETR command");
+#endif
+    if (ftp_status(*command,"150 ")) {
+    /*  ffpmsg ("RETR error, most likely file is not there (ftp_open)"); */
+      fclose(*command);
+#ifdef DEBUG
+      puts("File not there");
+#endif
+      return (FILE_NOT_OPENED);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     }
     
     /* if we got here then the file probably exists */
@@ -3298,11 +3385,14 @@ static int NET_ParseUrl(const char *url, char *proto, char *host, int *port,
     if ((thost = strchr(urlcopy, '@')) != NULL)
       urlcopy = thost+1;
 
+<<<<<<< HEAD
     if (strlen(urlcopy) > SHORTLEN-1)
     {
        free(urlcopyorig);
        return 1;
     }
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     strcpy(host,urlcopy);
     thost = host;
     while (*urlcopy != '/' && *urlcopy != ':' && *urlcopy) {
@@ -4442,4 +4532,8 @@ static int encode64(unsigned s_len, char *src, unsigned d_len, char *dst) {
   return 0;
 }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 #endif

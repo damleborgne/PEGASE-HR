@@ -46,7 +46,10 @@ typedef int16_t flex_int16_t;
 typedef uint16_t flex_uint16_t;
 typedef int32_t flex_int32_t;
 typedef uint32_t flex_uint32_t;
+<<<<<<< HEAD
 typedef uint64_t flex_uint64_t;
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 #else
 typedef signed char flex_int8_t;
 typedef short int flex_int16_t;
@@ -152,6 +155,7 @@ typedef unsigned int flex_uint32_t;
 #define FF_TYPEDEF_FF_BUFFER_STATE
 typedef struct ff_buffer_state *FF_BUFFER_STATE;
 #endif
+<<<<<<< HEAD
 
 #ifndef FF_TYPEDEF_FF_SIZE_T
 #define FF_TYPEDEF_FF_SIZE_T
@@ -160,6 +164,11 @@ typedef size_t ff_size_t;
 
 extern ff_size_t ffleng;
 
+=======
+
+extern int ffleng;
+
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 extern FILE *ffin, *ffout;
 
 #define EOB_ACT_CONTINUE_SCAN 0
@@ -183,6 +192,14 @@ extern FILE *ffin, *ffout;
 	while ( 0 )
 
 #define unput(c) ffunput( c, (fftext_ptr)  )
+<<<<<<< HEAD
+=======
+
+#ifndef FF_TYPEDEF_FF_SIZE_T
+#define FF_TYPEDEF_FF_SIZE_T
+typedef size_t ff_size_t;
+#endif
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 #ifndef FF_STRUCT_FF_BUFFER_STATE
 #define FF_STRUCT_FF_BUFFER_STATE
@@ -271,8 +288,13 @@ static FF_BUFFER_STATE * ff_buffer_stack = 0; /**< Stack as an array. */
 
 /* ff_hold_char holds the character lost when fftext is formed. */
 static char ff_hold_char;
+<<<<<<< HEAD
 static ff_size_t ff_n_chars;		/* number of characters read into ff_ch_buf */
 ff_size_t ffleng;
+=======
+static int ff_n_chars;		/* number of characters read into ff_ch_buf */
+int ffleng;
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 /* Points to current character in buffer. */
 static char *ff_c_buf_p = (char *) 0;
@@ -300,7 +322,11 @@ static void ff_init_buffer (FF_BUFFER_STATE b,FILE *file  );
 
 FF_BUFFER_STATE ff_scan_buffer (char *base,ff_size_t size  );
 FF_BUFFER_STATE ff_scan_string (ffconst char *ff_str  );
+<<<<<<< HEAD
 FF_BUFFER_STATE ff_scan_bytes (ffconst char *bytes,ff_size_t len  );
+=======
+FF_BUFFER_STATE ff_scan_bytes (ffconst char *bytes,int len  );
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 void *ffalloc (ff_size_t  );
 void *ffrealloc (void *,ff_size_t  );
@@ -355,13 +381,22 @@ static void ff_fatal_error (ffconst char msg[]  );
  */
 #define FF_DO_BEFORE_ACTION \
 	(fftext_ptr) = ff_bp; \
+<<<<<<< HEAD
 	ffleng = (ff_size_t) (ff_cp - ff_bp); \
+=======
+	ffleng = (size_t) (ff_cp - ff_bp); \
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 	(ff_hold_char) = *ff_cp; \
 	*ff_cp = '\0'; \
 	(ff_c_buf_p) = ff_cp;
 
+<<<<<<< HEAD
 #define FF_NUM_RULES 30
 #define FF_END_OF_BUFFER 31
+=======
+#define FF_NUM_RULES 26
+#define FF_END_OF_BUFFER 27
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 /* This struct is not used in this scanner,
    but its presence is necessary. */
 struct ff_trans_info
@@ -369,7 +404,11 @@ struct ff_trans_info
 	flex_int32_t ff_verify;
 	flex_int32_t ff_nxt;
 	};
+<<<<<<< HEAD
 static ffconst flex_int16_t ff_accept[174] =
+=======
+static ffconst flex_int16_t ff_accept[160] =
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     {   0,
         0,    0,   31,   29,    1,   28,   18,   29,   29,   29,
        29,   29,   29,   29,   10,    8,    8,   24,   29,   23,
@@ -424,7 +463,11 @@ static ffconst flex_int32_t ff_ec[256] =
         1,    1,    1,    1,    1
     } ;
 
+<<<<<<< HEAD
 static ffconst flex_int32_t ff_meta[59] =
+=======
+static ffconst flex_int32_t ff_meta[56] =
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     {   0,
         1,    1,    2,    1,    1,    1,    3,    1,    1,    1,
         1,    1,    1,    1,    4,    4,    4,    4,    1,    1,
@@ -434,7 +477,11 @@ static ffconst flex_int32_t ff_meta[59] =
         5,    5,    5,    5,    5,    5,    5,    1
     } ;
 
+<<<<<<< HEAD
 static ffconst flex_int16_t ff_base[182] =
+=======
+static ffconst flex_int16_t ff_base[167] =
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     {   0,
         0,    0,  412,  413,  409,  413,  390,  404,  401,  400,
       398,  396,   34,  392,   70,  114,   16,  383,   46,  382,
@@ -458,7 +505,11 @@ static ffconst flex_int16_t ff_base[182] =
        89
     } ;
 
+<<<<<<< HEAD
 static ffconst flex_int16_t ff_def[182] =
+=======
+static ffconst flex_int16_t ff_def[167] =
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     {   0,
       173,    1,  173,  173,  173,  173,  173,  174,  175,  176,
       173,  177,  173,  173,  173,  173,   16,  173,  173,  173,
@@ -482,7 +533,11 @@ static ffconst flex_int16_t ff_def[182] =
       173
     } ;
 
+<<<<<<< HEAD
 static ffconst flex_int16_t ff_nxt[472] =
+=======
+static ffconst flex_int16_t ff_nxt[424] =
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     {   0,
         4,    5,    6,    7,    8,    9,   10,   11,   12,   13,
         4,   14,    4,   15,   16,   17,   17,   17,   18,   19,
@@ -538,7 +593,11 @@ static ffconst flex_int16_t ff_nxt[472] =
       173
     } ;
 
+<<<<<<< HEAD
 static ffconst flex_int16_t ff_chk[472] =
+=======
+static ffconst flex_int16_t ff_chk[424] =
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -725,7 +784,11 @@ static int expr_read( char *buf, int nbytes );
         if ( (result = expr_read( (char *) buf, max_size )) < 0 ) \
             FF_FATAL_ERROR( "read() in flex scanner failed" );
 
+<<<<<<< HEAD
 #line 729 "<stdout>"
+=======
+#line 712 "<stdout>"
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 #define INITIAL 0
 
@@ -764,7 +827,11 @@ FILE *ffget_out (void );
 
 void ffset_out  (FILE * out_str  );
 
+<<<<<<< HEAD
 ff_size_t ffget_leng (void );
+=======
+int ffget_leng (void );
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 char *ffget_text (void );
 
@@ -814,7 +881,11 @@ static int input (void );
 /* This used to be an fputs(), but since the string might contain NUL's,
  * we now use fwrite().
  */
+<<<<<<< HEAD
 #define ECHO fwrite( fftext, ffleng, 1, ffout )
+=======
+#define ECHO do { if (fwrite( fftext, ffleng, 1, ffout )) {} } while (0)
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 #endif
 
 /* Gets input and stuffs it into "buf".  number of characters read, or FF_NULL,
@@ -825,7 +896,11 @@ static int input (void );
 	if ( FF_CURRENT_BUFFER_LVALUE->ff_is_interactive ) \
 		{ \
 		int c = '*'; \
+<<<<<<< HEAD
 		ff_size_t n; \
+=======
+		unsigned n; \
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 		for ( n = 0; n < max_size && \
 			     (c = getc( ffin )) != EOF && c != '\n'; ++n ) \
 			buf[n] = (char) c; \
@@ -907,10 +982,17 @@ FF_DECL
 	register char *ff_cp, *ff_bp;
 	register int ff_act;
     
+<<<<<<< HEAD
 #line 146 "eval.l"
 
 
 #line 914 "<stdout>"
+=======
+#line 142 "eval.l"
+
+
+#line 897 "<stdout>"
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 	if ( !(ff_init) )
 		{
@@ -1078,7 +1160,11 @@ FF_RULE_SETUP
 	FF_BREAK
 case 4:
 FF_RULE_SETUP
+<<<<<<< HEAD
 #line 219 "eval.l"
+=======
+#line 215 "eval.l"
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 {
                   int len;
                   char tmpstring[256];
@@ -1173,7 +1259,11 @@ FF_RULE_SETUP
 	FF_BREAK
 case 5:
 FF_RULE_SETUP
+<<<<<<< HEAD
 #line 310 "eval.l"
+=======
+#line 306 "eval.l"
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 {
 		  long int constval = 0;
 		  char *p;
@@ -1186,6 +1276,7 @@ FF_RULE_SETUP
 	FF_BREAK
 case 6:
 FF_RULE_SETUP
+<<<<<<< HEAD
 #line 319 "eval.l"
 {
 		  long int constval = 0;
@@ -1222,6 +1313,9 @@ FF_RULE_SETUP
 case 9:
 FF_RULE_SETUP
 #line 344 "eval.l"
+=======
+#line 310 "eval.l"
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 {
                   if ((fftext[0] == 't') || (fftext[0] == 'T'))
 		    fflval.log = 1;
@@ -1232,7 +1326,11 @@ FF_RULE_SETUP
 	FF_BREAK
 case 10:
 FF_RULE_SETUP
+<<<<<<< HEAD
 #line 351 "eval.l"
+=======
+#line 317 "eval.l"
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 {
                   fflval.dbl = atof(fftext);
 		  return( DOUBLE );
@@ -1240,7 +1338,11 @@ FF_RULE_SETUP
 	FF_BREAK
 case 11:
 FF_RULE_SETUP
+<<<<<<< HEAD
 #line 355 "eval.l"
+=======
+#line 321 "eval.l"
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 {
                   if(        !fits_strcasecmp(fftext,"#PI") ) {
 		     fflval.dbl = (double)(4) * atan((double)(1));
@@ -1272,7 +1374,11 @@ FF_RULE_SETUP
 	FF_BREAK
 case 12:
 FF_RULE_SETUP
+<<<<<<< HEAD
 #line 383 "eval.l"
+=======
+#line 349 "eval.l"
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 {
                   int len;
                   len = strlen(fftext) - 2;
@@ -1293,7 +1399,11 @@ FF_RULE_SETUP
 	FF_BREAK
 case 13:
 FF_RULE_SETUP
+<<<<<<< HEAD
 #line 400 "eval.l"
+=======
+#line 366 "eval.l"
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 {
 		 int    len,type;
 
@@ -1309,7 +1419,11 @@ FF_RULE_SETUP
 	FF_BREAK
 case 14:
 FF_RULE_SETUP
+<<<<<<< HEAD
 #line 412 "eval.l"
+=======
+#line 378 "eval.l"
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 {
                   char *fname;
 		  int len=0;
@@ -1341,6 +1455,7 @@ FF_RULE_SETUP
 		     return( FUNCTION  );
 		}
 	FF_BREAK
+<<<<<<< HEAD
 case 15:
 FF_RULE_SETUP
 #line 442 "eval.l"
@@ -1385,9 +1500,72 @@ case 23:
 FF_RULE_SETUP
 #line 450 "eval.l"
 { return( GT      ); }
+=======
+case 12:
+FF_RULE_SETUP
+#line 405 "eval.l"
+{ return( INTCAST ); }
+	FF_BREAK
+case 13:
+FF_RULE_SETUP
+#line 406 "eval.l"
+{ return( FLTCAST ); }
+	FF_BREAK
+case 14:
+FF_RULE_SETUP
+#line 407 "eval.l"
+{ return( POWER   ); }
+	FF_BREAK
+case 15:
+FF_RULE_SETUP
+#line 408 "eval.l"
+{ return( NOT     ); }
+	FF_BREAK
+case 16:
+FF_RULE_SETUP
+#line 409 "eval.l"
+{ return( OR      ); }
+	FF_BREAK
+case 17:
+FF_RULE_SETUP
+#line 410 "eval.l"
+{ return( AND     ); }
+	FF_BREAK
+case 18:
+FF_RULE_SETUP
+#line 411 "eval.l"
+{ return( EQ      ); }
+	FF_BREAK
+case 19:
+FF_RULE_SETUP
+#line 412 "eval.l"
+{ return( NE      ); }
+	FF_BREAK
+case 20:
+FF_RULE_SETUP
+#line 413 "eval.l"
+{ return( GT      ); }
+	FF_BREAK
+case 21:
+FF_RULE_SETUP
+#line 414 "eval.l"
+{ return( LT      ); }
+	FF_BREAK
+case 22:
+FF_RULE_SETUP
+#line 415 "eval.l"
+{ return( GTE     ); }
+	FF_BREAK
+case 23:
+FF_RULE_SETUP
+#line 416 "eval.l"
+{ return( LTE     ); }
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 	FF_BREAK
 case 24:
+/* rule 24 can match eol */
 FF_RULE_SETUP
+<<<<<<< HEAD
 #line 451 "eval.l"
 { return( LT      ); }
 	FF_BREAK
@@ -1423,6 +1601,22 @@ FF_RULE_SETUP
 ECHO;
 	FF_BREAK
 #line 1426 "<stdout>"
+=======
+#line 417 "eval.l"
+{ return( '\n'    ); }
+	FF_BREAK
+case 25:
+FF_RULE_SETUP
+#line 418 "eval.l"
+{ return( fftext[0] ); }
+	FF_BREAK
+case 26:
+FF_RULE_SETUP
+#line 419 "eval.l"
+ECHO;
+	FF_BREAK
+#line 1361 "<stdout>"
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 case FF_STATE_EOF(INITIAL):
 	ffterminate();
 
@@ -1608,7 +1802,11 @@ static int ff_get_next_buffer (void)
 
 	else
 		{
+<<<<<<< HEAD
 			ff_size_t num_to_read =
+=======
+			int num_to_read =
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 			FF_CURRENT_BUFFER_LVALUE->ff_buf_size - number_to_move - 1;
 
 		while ( num_to_read <= 0 )
@@ -1653,7 +1851,11 @@ static int ff_get_next_buffer (void)
 
 		/* Read in more data. */
 		FF_INPUT( (&FF_CURRENT_BUFFER_LVALUE->ff_ch_buf[number_to_move]),
+<<<<<<< HEAD
 			(ff_n_chars), num_to_read );
+=======
+			(ff_n_chars), (size_t) num_to_read );
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 		FF_CURRENT_BUFFER_LVALUE->ff_n_chars = (ff_n_chars);
 		}
@@ -1763,7 +1965,11 @@ static int ff_get_next_buffer (void)
 	if ( ff_cp < FF_CURRENT_BUFFER_LVALUE->ff_ch_buf + 2 )
 		{ /* need to shift things up to make room */
 		/* +2 for EOB chars. */
+<<<<<<< HEAD
 		register ff_size_t number_to_move = (ff_n_chars) + 2;
+=======
+		register int number_to_move = (ff_n_chars) + 2;
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 		register char *dest = &FF_CURRENT_BUFFER_LVALUE->ff_ch_buf[
 					FF_CURRENT_BUFFER_LVALUE->ff_buf_size + 2];
 		register char *source =
@@ -1812,7 +2018,11 @@ static int ff_get_next_buffer (void)
 
 		else
 			{ /* need more input */
+<<<<<<< HEAD
 			ff_size_t offset = (ff_c_buf_p) - (fftext_ptr);
+=======
+			int offset = (ff_c_buf_p) - (fftext_ptr);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 			++(ff_c_buf_p);
 
 			switch ( ff_get_next_buffer(  ) )
@@ -1836,7 +2046,11 @@ static int ff_get_next_buffer (void)
 				case EOB_ACT_END_OF_FILE:
 					{
 					if ( ffwrap( ) )
+<<<<<<< HEAD
 						return 0;
+=======
+						return EOF;
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 					if ( ! (ff_did_buffer_switch_on_eof) )
 						FF_NEW_FILE;
@@ -2088,7 +2302,11 @@ void ffpop_buffer_state (void)
  */
 static void ffensure_buffer_stack (void)
 {
+<<<<<<< HEAD
 	ff_size_t num_to_alloc;
+=======
+	int num_to_alloc;
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     
 	if (!(ff_buffer_stack)) {
 
@@ -2185,11 +2403,20 @@ FF_BUFFER_STATE ff_scan_string (ffconst char * ffstr )
  * 
  * @return the newly allocated buffer state object.
  */
+<<<<<<< HEAD
 FF_BUFFER_STATE ff_scan_bytes  (ffconst char * ffbytes, ff_size_t  _ffbytes_len )
 {
 	FF_BUFFER_STATE b;
 	char *buf;
 	ff_size_t n, i;
+=======
+FF_BUFFER_STATE ff_scan_bytes  (ffconst char * ffbytes, int  _ffbytes_len )
+{
+	FF_BUFFER_STATE b;
+	char *buf;
+	ff_size_t n;
+	int i;
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     
 	/* Get memory for full buffer, including space for trailing EOB's. */
 	n = _ffbytes_len + 2;
@@ -2271,7 +2498,11 @@ FILE *ffget_out  (void)
 /** Get the length of the current token.
  * 
  */
+<<<<<<< HEAD
 ff_size_t ffget_leng  (void)
+=======
+int ffget_leng  (void)
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 {
         return ffleng;
 }
@@ -2419,7 +2650,11 @@ void yyfffree (void * ptr )
 
 #define FFTABLES_NAME "fftables"
 
+<<<<<<< HEAD
 #line 457 "eval.l"
+=======
+#line 419 "eval.l"
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 
 

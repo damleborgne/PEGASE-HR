@@ -2394,7 +2394,11 @@ if (gParse.hdutype != IMAGE_HDU) {
       colIter->datatype = TSTRING;
       type = SCOLUMN;
       if ( width >= MAX_STRLEN ) {
+<<<<<<< HEAD
 	snprintf(temp, 80, "column %d is wider than maximum %d characters",
+=======
+	sprintf(temp, "column %d is wider than maximum %d characters",
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 		colnum, MAX_STRLEN-1);
         ffpmsg(temp);
 	gParse.status = PARSE_LRG_VECTOR;

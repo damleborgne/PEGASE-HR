@@ -1,0 +1,13 @@
+format: PEGASE-HR/SSPs   
+version: 1               
+grid type: 
+standard                      
+lib: stellibLCBcor.fits
+head_end:
+tt_tracksZ0.0001.dat 
+tt_tracksZ0.0004.dat 
+tt_tracksZ0.004.dat 
+tt_tracksZ0.008.dat 
+tt_tracksZ0.02.dat 
+tt_tracksZ0.05.dat 
+tt_tracksZ0.1.dat 

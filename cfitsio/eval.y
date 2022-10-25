@@ -63,9 +63,12 @@
 /*                              determine the output dimensions         */
 /*  Craig B Markwardt Aug 2009  Add substring STRMID() and string search*/
 /*                              STRSTR() functions; more overflow checks*/
+<<<<<<< HEAD
 /*  Craig B Markwardt Dec 2019  Add bit/hex/oct literal strings and     */
 /*                              bitwise operatiosn between integers     */
 /*  Craig B Markwardt Mar 2021  Add SETNULL() function                  */
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 /*                                                                      */
 /************************************************************************/
 
@@ -744,6 +747,7 @@ expr:    LONG
 				"are not compatible");
 			YYERROR;
 		      }
+<<<<<<< HEAD
 		   } else if (FSTRCMP($1,"SETNULL(") == 0) {
 		     if (OPER($2) != CONST_OP
 			 || SIZE($2) != 1) {
@@ -753,6 +757,18 @@ expr:    LONG
 		     /* Make sure first arg is same type as second arg */
 		     if ( TYPE($2) != TYPE($4) ) $2 = New_Unary( TYPE($4), 0, $2 );
 		     $$ = New_Func( 0, setnull_fct, 2, $4, $2, 0, 0, 0, 0, 0 );
+=======
+#if 0
+		   } else if (FSTRCMP($1,"STRSTR(") == 0) {
+		     if( TYPE($2) != STRING || TYPE($4) != STRING) {
+		       yyerror("Arguments to strstr(s,r) must be strings");
+		       YYERROR;
+		     }
+		     $$ = New_Func( LONG, strpos_fct, 2, $2, $4, 0, 
+				    0, 0, 0, 0 );
+		     TEST($$);
+#endif
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 		   } else {
 		      yyerror("Function(expr,expr) not supported");
 		      YYERROR;
@@ -1744,11 +1760,16 @@ static int New_GTI( funcOp Op, char *fname, int Node1, int Node2, char *start, c
 	       that0->value.data.dblptr[i] += dt;
 	 }
       }
+<<<<<<< HEAD
       /* If Node1 is constant (gtifilt_fct) or
 	 Node1 and Node2 are constant (gtiover_fct), then evaluate now */
       if( OPER(Node1)==CONST_OP && (Op == gtifilt_fct || OPER(Node2)==CONST_OP)) {
 	this->DoOp( this );
       }
+=======
+      if( OPER(Node1)==CONST_OP )
+	 this->DoOp( this );
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
    }
 
    if( samefile )

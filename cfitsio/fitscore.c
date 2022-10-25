@@ -75,6 +75,7 @@ float ffvers(float *version)  /* IO - version number */
   Note that this method of calculation limits minor/micro fields to < 100.
 */
 {
+<<<<<<< HEAD
       *version = (float)CFITSIO_MAJOR + (float)(.01*CFITSIO_MINOR)
                    + (float)(.0001*CFITSIO_MICRO);
 
@@ -91,6 +92,13 @@ float ffvers(float *version)  /* IO - version number */
       *version = 3.43       Mar 2018
       *version = 3.42       Mar 2017
       *version = 3.41       Nov 2016
+=======
+      *version = (float) 3.41;
+
+/*       Nov 2016
+
+   Previous releases:
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
       *version = 3.40       Oct 2016
       *version = 3.39       Apr 2016
       *version = 3.38       Feb 2016
@@ -990,6 +998,7 @@ int fftrec(char *card,       /* I -  keyword card to test */
               (int) (ii+1), (int) card[ii] );
 
             if (card[ii] == 0)
+<<<<<<< HEAD
 	        strncat(msg, " (NULL char.)",FLEN_ERRMSG-strlen(msg)-1);
             else if (card[ii] == 9)
 	        strncat(msg, " (TAB char.)",FLEN_ERRMSG-strlen(msg)-1);
@@ -1005,6 +1014,23 @@ int fftrec(char *card,       /* I -  keyword card to test */
 	        strncat(msg, " (Escape char.)",FLEN_ERRMSG-strlen(msg)-1);
             else if (card[ii] == 127)
 	        strncat(msg, " (Delete char.)",FLEN_ERRMSG-strlen(msg)-1);
+=======
+	        strcat(msg, " (NULL char.)");
+            else if (card[ii] == 9)
+	        strcat(msg, " (TAB char.)");
+            else if (card[ii] == 10)
+	        strcat(msg, " (Line Feed char.)");
+            else if (card[ii] == 11)
+	        strcat(msg, " (Vertical Tab)");
+            else if (card[ii] == 12)
+	        strcat(msg, " (Form Feed char.)");
+            else if (card[ii] == 13)
+	        strcat(msg, " (Carriage Return)");
+            else if (card[ii] == 27)
+	        strcat(msg, " (Escape char.)");
+            else if (card[ii] == 127)
+	        strcat(msg, " (Delete char.)");
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
             ffpmsg(msg);
 
@@ -1132,6 +1158,7 @@ int ffmkky(const char *keyname,   /* I - keyword name    */
 	    /* for now at least, treat all cases as an implicit ESO HIERARCH keyword. */
 	    /* This could  change if FITS is ever expanded to directly support longer keywords. */
 	    
+<<<<<<< HEAD
             if (namelen + 11 > FLEN_CARD-1)
             {
                 ffpmsg(
@@ -1139,6 +1166,8 @@ int ffmkky(const char *keyname,   /* I - keyword name    */
                 ffpmsg(keyname);
                 return(*status = BAD_KEYCHAR);
             }
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
             strcat(card, "HIERARCH ");
             strcat(card, tmpname);
 	    namelen += 9;
@@ -1314,6 +1343,7 @@ int ffkeyn(const char *keyroot,   /* I - root string for keyword name */
 /*
   Construct a keyword name string by appending the index number to the root.
   e.g., if root = "TTYPE" and value = 12 then keyname = "TTYPE12".
+  Note: this allows keyword names longer than 8 characters.
 */
 {
     char suffix[16];
@@ -1325,16 +1355,24 @@ int ffkeyn(const char *keyroot,   /* I - root string for keyword name */
     if (rootlen == 0 || value < 0 )
        return(*status = 206);
 
+<<<<<<< HEAD
     snprintf(suffix, 16, "%d", value); /* construct keyword suffix */
+=======
+    sprintf(suffix, "%d", value); /* construct keyword suffix */
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
     strcpy(keyname, keyroot);   /* copy root string to name string */
     while (rootlen > 0 && keyname[rootlen - 1] == ' ') {
         rootlen--;                 /* remove trailing spaces in root name */
         keyname[rootlen] = '\0';
     }
+<<<<<<< HEAD
     if (strlen(suffix) + strlen(keyname) > 8)
        return (*status=206);
        
+=======
+
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     strcat(keyname, suffix);    /* append suffix to the root */
     return(*status);
 }
@@ -3836,8 +3874,14 @@ int ffeqtyll( fitsfile *fptr,  /* I - FITS file pointer                       */
         break;
         
       case TLONGLONG:
+<<<<<<< HEAD
         min_val = -9.2233720368547755808E18;
         max_val =  9.2233720368547755807E18;
+=======
+        /*  simply reuse the TLONG values */
+        min_val = -2147483648.0;
+        max_val =  2147483647.0;
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
         break;
 	
       default:  /* don't have to deal with other data types */
@@ -5236,7 +5280,11 @@ int ffgtbc(fitsfile *fptr,    /* I - FITS file pointer          */
             nbytes = colptr->trepeat * 16;
 
 	  else {
+<<<<<<< HEAD
 		snprintf(message,FLEN_ERRMSG,
+=======
+		sprintf(message,
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 		"unknown binary table column type: %s", colptr->tform);
 		ffpmsg(message);
 		*status = BAD_TFORM;
@@ -5545,7 +5593,11 @@ int ffgcprll( fitsfile *fptr, /* I - FITS file pointer                      */
         if ( ffrdef(fptr, status) > 0)               
             return(*status);
 
+<<<<<<< HEAD
     } else if (writemode > 0 && writemode != 15) {
+=======
+    } else if (writemode > 0) {
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 	/* Only terminate the header with the END card if */
 	/* writing to the stdout stream (don't have random access). */
@@ -6748,8 +6800,13 @@ int ffuptf(fitsfile *fptr,      /* I - FITS file pointer */
           /* construct the new keyword value */
           strcpy(newform, "'");
           tmp = strchr(tform, '(');  /* truncate old length, if present */
+<<<<<<< HEAD
           if (tmp) *tmp = 0;
           lenform = strlen(tform);
+=======
+          if (tmp) *tmp = 0;       
+          strcat(newform, tform);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
           /* print as double, because the string-to-64-bit */
           /* conversion is platform dependent (%lld, %ld, %I64d) */
@@ -8926,7 +8983,11 @@ int ffinttyp(char *cval,  /* I - formatted string representation of the integer 
         *dtype = TINT;
     } else if (len > 10 && len < 19) {
         *dtype = TLONGLONG;
+<<<<<<< HEAD
     } else if (len > 20) {
+=======
+    } else if (len > 19) {
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 	*status = BAD_INTKEY;
     } else {
     
@@ -8959,6 +9020,7 @@ int ffinttyp(char *cval,  /* I - formatted string representation of the integer 
 	    if (strcmp(p,"9223372036854775807") <= 0 ) {
 	        *dtype = TLONGLONG;
 	    } else {
+<<<<<<< HEAD
 		*dtype = TULONGLONG;
 	    }
 	} else if (len == 20) {
@@ -8966,6 +9028,9 @@ int ffinttyp(char *cval,  /* I - formatted string representation of the integer 
 	        *dtype = TULONGLONG;
 	    } else {
 	        *status = BAD_INTKEY;
+=======
+		*status = BAD_INTKEY;
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 	    }
 	}
 
@@ -9059,6 +9124,7 @@ int ffc2xx(const char *cval,   /* I - formatted string representation of the val
     return(*status);
 }
 /*--------------------------------------------------------------------------*/
+<<<<<<< HEAD
 int ffc2uxx(const char *cval,   /* I - formatted string representation of the value */
           char *dtype,         /* O - datatype code: C, L, F, I or X  */
 
@@ -9088,6 +9154,8 @@ int ffc2uxx(const char *cval,   /* I - formatted string representation of the va
     return(*status);
 }
 /*--------------------------------------------------------------------------*/
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 int ffc2i(const char *cval,   /* I - string representation of the value */
           long *ival,         /* O - numerical value of the input string */
           int *status)        /* IO - error status */
@@ -9210,6 +9278,7 @@ int ffc2j(const char *cval,     /* I - string representation of the value */
     return(*status);
 }
 /*--------------------------------------------------------------------------*/
+<<<<<<< HEAD
 int ffc2uj(const char *cval,     /* I - string representation of the value */
           ULONGLONG *ival,       /* O - numerical value of the input string */
           int *status)          /* IO - error status */
@@ -9271,6 +9340,8 @@ int ffc2uj(const char *cval,     /* I - string representation of the value */
     return(*status);
 }
 /*--------------------------------------------------------------------------*/
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 int ffc2l(const char *cval,  /* I - string representation of the value */
          int *lval,          /* O - numerical value of the input string */
          int *status)        /* IO - error status */
@@ -9654,12 +9725,15 @@ int ffc2rr(const char *cval,   /* I - string representation of the value */
 
     if (strchr(cval, 'D') || decimalpt == ',')  {
         /* strtod expects a comma, not a period, as the decimal point */
+<<<<<<< HEAD
         if (strlen(cval) > 72)
         {
            strcpy(msg,"Error: Invalid string to float in ffc2rr");
            ffpmsg(msg);
            return (*status=BAD_C2F);
         }
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
         strcpy(tval, cval);
 
         /*  The C language does not support a 'D'; replace with 'E' */
@@ -9730,12 +9804,15 @@ int ffc2dd(const char *cval,   /* I - string representation of the value */
 
     if (strchr(cval, 'D') || decimalpt == ',') {
         /* need to modify a temporary copy of the string before parsing it */
+<<<<<<< HEAD
         if (strlen(cval) > 72)
         {
            strcpy(msg,"Error: Invalid string to double in ffc2dd");
            ffpmsg(msg);
            return (*status=BAD_C2D);
         }
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
         strcpy(tval, cval);
         /*  The C language does not support a 'D'; replace with 'E' */
         if ((loc = strchr(tval, 'D'))) *loc = 'E';

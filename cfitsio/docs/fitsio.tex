@@ -32,7 +32,11 @@
 \medskip
 \medskip
 \begin{center}
+<<<<<<< HEAD
 {\Large Version 4.1\\}
+=======
+{\Large Version 3.0\\}
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 \end{center}
 \bigskip
 \vskip 2.5cm
@@ -47,7 +51,11 @@ USA}
 \vfill
 \bigskip
 \begin{center}
+<<<<<<< HEAD
 {\Large Feb 2022\\}
+=======
+{\Large April 2016\\}
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 \end{center}
 \vfill
 \end{titlepage}
@@ -319,12 +327,27 @@ absence of leading zeros, or 3 digit exponents in numbers,
 which can be ignored).
 
 The Fortran wrappers in CFITSIO may be tested with the testf77
+<<<<<<< HEAD
 program.  On Unix systems the Fortran compiler is typically
 called 'gfortran'.
 -
 
 \begin{verbatim}
    % gfortran -o testf77 testf77.f -L. -lcfitsio -lz -lcurl
+=======
+program.  On Unix systems the fortran compilation and link command
+may be called 'f77' or 'g77', depending on the system.
+
+\begin{verbatim}
+   % f77 -o testf77 testf77.f -L. -lcfitsio -lnsl -lsocket
+ or
+   % f77 -f -o testf77 testf77.f -L. -lcfitsio    (under SUN O/S)
+ or
+   % f77 -o testf77 testf77.f -Wl,-L. -lcfitsio -lm -lnsl -lsocket (HP/UX)
+ or
+   % g77 -o testf77 -s testf77.f -lcfitsio -lcc_dynamic -lncurses (Mac OS-X)
+
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
    % testf77 > testf77.lis
    % diff testf77.lis testf77.out
    % cmp testf77.fit testf77.std
@@ -1219,18 +1242,30 @@ respectively, the keyword unit strings in an existing keyword.
 \subsection{HIERARCH Convention for Extended Keyword Names}
 
 CFITSIO supports the HIERARCH keyword convention which allows keyword
+<<<<<<< HEAD
 names that are longer than 8 characters.  This convention
 was developed at the European Southern Observatory (ESO) and allows characters
 consisting of digits 0-9, upper case letters A-Z, the dash '-' and the underscore '\_'.
 The components of hierarchical keywords are separated by a single ASCII space charater.
 For instance:
+=======
+names that are longer then 8 characters and may contain the full range
+of printable ASCII text characters.  This convention
+was developed at the European Southern Observatory (ESO)  to support
+hierarchical FITS keyword such as:
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 \begin{verbatim}
 HIERARCH ESO INS FOCU POS = -0.00002500 / Focus position
 \end{verbatim}
 Basically, this convention uses the FITS keyword 'HIERARCH' to indicate
 that this convention is being used, then the actual keyword name
+<<<<<<< HEAD
 ({\tt'ESO INS FOCU POS'} in this example) begins in column 10.  The
+=======
+({\tt'ESO INS FOCU POS'} in this example) begins in column 10 and can
+contain any printable ASCII text characters, including spaces.  The
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 equals sign marks the end of the keyword name and is followed by the
 usual value and comment fields just as in standard FITS keywords.
 Further details of this convention are described at
@@ -1239,14 +1274,24 @@ and in Section 4.4 of the ESO Data Interface Control Document that
 is linked to from
 http://archive.eso.org/cms/tools-documentation/eso-data-interface-control.html.
 
+<<<<<<< HEAD
 This convention allows a broader range of keyword names
+=======
+This convention allows a much broader range of keyword names
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 than is allowed by the FITS Standard.  Here are more examples
 of such keywords:
 
 \begin{verbatim}
+<<<<<<< HEAD
 HIERARCH LONGKEYWORD = 47.5 / Keyword has > 8 characters
 HIERARCH LONG-KEY_WORD2 = 52.3 / Long keyword with hyphen, underscore and digit
 HIERARCH EARTH IS A STAR = F / Keyword contains embedded spaces
+=======
+HIERARCH LongKeyword = 47.5 / Keyword has > 8 characters, and mixed case
+HIERARCH XTE$TEMP = 98.6 / Keyword contains the '$' character
+HIERARCH Earth is a star = F / Keyword contains embedded spaces
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 \end{verbatim}
 CFITSIO will transparently read and write these keywords, so application
 programs do not in general need to know anything about the specific
@@ -1264,8 +1309,17 @@ about 40 characters, which leaves enough room for most keyword values.
 CFITSIO returns an error if there is not enough room for both the
 keyword name and the keyword value on the 80-character card, except for
 string-valued keywords which are simply truncated so that the closing
+<<<<<<< HEAD
 quote character falls in column 80. A space is also required on either 
 side of the equal sign.
+=======
+quote character falls in column 80.  In the current implementation,
+CFITSIO preserves the case of the letters when writing the keyword
+name, but it is case-insensitive when reading or searching for a
+keyword.  The current implementation allows any ASCII text character
+(ASCII 32 to ASCII 126) in the keyword name except for the '='
+character.  A space is also required on either side of the equal sign.
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 
 \section{Optimizing Code for Maximum Processing Speed}
@@ -1555,8 +1609,12 @@ used by these interface routines.
 \begin{description}
 \item[1 ] Return the current version number of the fitsio library.
     The version number will be incremented with each new
+<<<<<<< HEAD
    release of CFITSIO. The 3 fields of the version string M.xx.yy
    are converted to a float as: M + .01*xx + .0001*yy.
+=======
+   release of CFITSIO.
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 \end{description}
 
 \begin{verbatim}
@@ -5137,6 +5195,7 @@ processed first by CFITSIO, followed by the rowFilter specifier, and
 finally by the binSpec specifier.
 
 
+<<<<<<< HEAD
 Multiple colFilter or rowFilter specifications may appear as separated
 bracketed expressions, in any order.  Multiple colFilter or rowFilter
 expressions are treated internally as a single effective expression,
@@ -5144,6 +5203,8 @@ with order of operations determined from left to right.  CFITSIO does
 not support the @filename.txt complex syntax option if multiple
 expressions are also used.
 
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 \section{Filetype}
 
 The type of file determines the medium on which the file is located
@@ -5848,6 +5909,7 @@ Any lines in the external text file
 that begin with 2 slash characters ('//') will be ignored and may be
 used to add comments into the file.
 
+<<<<<<< HEAD
 When using column filtering to open a file ``on the fly,'' it is permitted
 to use multiple column filtering expressions.  For example, the
 syntax
@@ -5863,6 +5925,8 @@ Please note that if multiple column filtering expressions are used, it is
 not permitted to also use the \verb+[col @filename.txt]+ syntax in any
 of the individual expressions.
 
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 By default, the datatype of the resulting image will be the same as
 the original image, but one may force a different datatype by appended
 a code letter to the 'pix' keyword:
@@ -6098,6 +6162,7 @@ Examples:
     absolute row number, only a relative offset.  Rows that fall outside
     the table will be treated as undefined, or NULLs.
 
+<<<<<<< HEAD
     When using row filtering to open a file ``on the fly,'' it is permitted
     to use multiple row filtering expressions.  For example, the expression
 \begin{verbatim}
@@ -6129,6 +6194,8 @@ of the individual expressions.
 %%         ftools/guis/fv/doc/expressions.html
 %%   -->
 
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     Boolean   operators can be  used in  the expression  in either their
     Fortran or C forms.  The following boolean operators are available:
 
@@ -6140,6 +6207,7 @@ of the individual expressions.
     "negation"     .not. .NOT. !  "approx. equal(1e-7)"  ~
 \end{verbatim}
 
+<<<<<<< HEAD
 Note that the exclamation point, '!', is a special UNIX character, so
 if it is used on the command line rather than entered at a task
 prompt, it must be preceded by a backslash to force the UNIX shell to
@@ -6151,6 +6219,20 @@ arithmetic  operators and  functions  can be  used in the expression
 (function names are case insensitive).  A null value will be returned
 in case of illegal operations such as divide by zero, sqrt(negative)
 log(negative), log10(negative), arccos(.gt. 1), arcsin(.gt. 1).
+=======
+Note  that the exclamation
+point,  '!', is a special UNIX character, so if it is used  on the
+command line rather than entered at a task prompt, it must be  preceded
+by a backslash to force the UNIX shell to ignore it.
+
+    The expression may  also include arithmetic operators and functions.
+    Trigonometric  functions use  radians,  not degrees.  The  following
+    arithmetic  operators and  functions  can be  used in the expression
+    (function names are case insensitive). A null value will be returned
+    in case of illegal operations such as divide by zero, sqrt(negative)
+    log(negative), log10(negative), arccos(.gt. 1), arcsin(.gt. 1).
+
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 \begin{verbatim}
     "addition"           +          "subtraction"          -
@@ -6165,6 +6247,7 @@ log(negative), log10(negative), arccos(.gt. 1), arcsin(.gt. 1).
     "round down to int"  floor(x)   "round up to int"      ceil(x)
     "exponential"        exp(x)     "square root"          sqrt(x)
     "natural log"        log(x)     "common log"           log10(x)
+<<<<<<< HEAD
     "modulus"            x % y      
     "bitwise AND"        x & y      "bitwise OR"           x | y
     "bitwise XOR"        x ^^ y     (bitwise operators are 32-bit int only)
@@ -6208,6 +6291,45 @@ element by element.  The first value of seqdiff is the first value of
 x.  A single null value in x causes a pair of nulls in the output.
 The seqdiff and accum functions are functional inverses, i.e.,
 seqdiff(accum(x)) == x as long as no null values are present.
+=======
+    "modulus"            x % y      "random # [0.0,1.0)"   random()
+    "random Gaussian"    randomn()  "random Poisson"       randomp(x)
+    "minimum"            min(x,y)   "maximum"              max(x,y)
+    "cumulative sum"     accum(x)  "sequential difference" seqdiff(x)
+    "if-then-else"       b?x:y
+    "angular separation"  angsep(ra1,dec1,ra2,de2) (all in degrees)
+    "substring"      strmid(s,p,n) "string search"         strstr(s,r)
+\end{verbatim}
+Three different random number functions are provided:  random(), with no
+arguments, produces a uniform random deviate between 0 and 1; randomn(),
+also with no arguments, produces a normal (Gaussian) random deviate  with
+zero mean and unit standard deviation; randomp(x) produces a Poisson random
+deviate whose expected number of counts is X.  X may be any positive real
+number of expected counts, including fractional values, but the return value
+is an integer.
+
+When the random functions are used in a vector expression, by default
+the same random value will be used when evaluating each element of the vector.
+If different random numbers are desired, then the name of a vector
+column should be supplied as the single argument to the random
+function (e.g., "flux + 0.1 * random(flux)", where "flux' is the
+name of a vector column).  This will create a vector of
+random numbers that will be used in sequence when evaluating each
+element of the vector expression.
+
+    An alternate syntax for the min and max functions  has only a single
+    argument which  should be  a  vector value (see  below).  The result
+    will be the minimum/maximum element contained within the vector.
+
+    The accum(x) function forms the cumulative sum of x, element by element.
+    Vector columns are supported simply by performing the summation process
+    through all the values.  Null values are treated as 0.  The seqdiff(x)
+    function forms the sequential difference of x, element by element.
+    The first value of seqdiff is the first value of x.  A single null
+    value in x causes a pair of nulls in the output.  The seqdiff and
+    accum functions are functional inverses, i.e., seqdiff(accum(x)) == x
+    as long as no null values are present.
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 In the if-then-else expression, "b?x:y", b is an explicit boolean
 value or expression.  There is no automatic type conversion from
@@ -6215,16 +6337,25 @@ numeric to boolean values, so one needs to use "iVal!=0" instead of
 merely "iVal" as the boolean argument. x and y can be any scalar data
 type (including string).
 
+<<<<<<< HEAD
 The angsep function computes the angular separation in degrees between
 2 celestial positions, where the first 2 parameters give the RA-like
 and Dec-like coordinates (in decimal degrees) of the first position,
 and the 3rd and 4th parameters give the coordinates of the second
 position.
+=======
+    The angsep function computes the angular separation in degrees
+    between 2 celestial positions, where the first 2 parameters
+    give the RA-like and Dec-like coordinates (in decimal degrees)
+    of the first position, and the 3rd and 4th parameters give the
+    coordinates of the second position.
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 The substring function strmid(S,P,N) extracts a substring from S,
 starting at string position P, with a substring length N.  The first
 character position in S is labeled as 1. If P is 0, or refers to a
 position beyond the end of S, then the extracted substring will be
+<<<<<<< HEAD
 NULL.  S, P, and N may be functions of other columns.
 
 The string search function strstr(S,R) searches for the first
@@ -6236,6 +6367,19 @@ returns a NULL value.
 The following type casting operators are available, where the
 enclosing parentheses are required and taken from the C language
 usage. Also, the integer to real casts values to double precision:
+=======
+NULL.   S, P, and N may be functions of other columns.
+
+The string search function strstr(S,R) searches for the first occurrence
+of the substring R in S.  The result is an integer, indicating the
+character position of the first match (where 1 is the first character
+position of S).  If no match is found, then strstr() returns a NULL
+value.
+
+    The  following  type  casting  operators  are  available,  where the
+    enclosing parentheses are required and taken  from  the  C  language
+    usage. Also, the integer to real casts values to double precision:
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 \begin{verbatim}
                 "real to integer"    (int) x     (INT) x
@@ -6256,6 +6400,7 @@ usage. Also, the integer to real casts values to double precision:
     "null" constants  are useful for conditionally  setting table values
     to a NULL, or undefined, value (eg., "col1==-99 ? \#NULL : col1").
 
+<<<<<<< HEAD
     Integer constants may be specified using the following notation,
 \begin{verbatim}
            13245   decimal integer
@@ -6270,6 +6415,8 @@ usage. Also, the integer to real casts values to double precision:
     allow the "wildcard" bit, and may only be used in logical
     expressions; see below).
 
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     There is also a function for testing if  two  values  are  close  to
     each  other,  i.e.,  if  they are "near" each other to within a user
     specified tolerance. The  arguments,  value\_1  and  value\_2  can  be
@@ -6289,6 +6436,7 @@ usage. Also, the integer to real casts values to double precision:
 \begin{verbatim}
          "a null value?"              ISNULL(x)
          "define a value for null"    DEFNULL(x,y)
+<<<<<<< HEAD
          "declare certain value null" SETNULL(x,y)
 \end{verbatim}
     ISNULL(x)
@@ -6298,6 +6446,15 @@ usage. Also, the integer to real casts values to double precision:
     value of y.  SETNULL(x,y) allows NULL values to be inserted into
     a variable; if x==y, a NULL value is returned; otherwise y is returned
     (x and y must be numerical, and x must be a scalar).
+=======
+\end{verbatim}
+    The former
+    returns a boolean value of TRUE if the  argument  x  is  NULL.   The
+    later  "defines"  a  value  to  be  substituted  for NULL values; it
+    returns the value of x if x is not NULL, otherwise  it  returns  the
+    value of y.
+
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 \subsection{Bit Masks}
 
@@ -6315,10 +6472,14 @@ usage. Also, the integer to real casts values to double precision:
     In  all  the  representations, an x or X is allowed in the mask as a
     wild card. Note that the x represents a  different  number  of  wild
     card  bits  in  each  representation.  All  representations are case
+<<<<<<< HEAD
     insensitive.  Although bitmasks may be of arbitrary length and contain
     a wildcard, they may only be used in logical expressions, unlike 
     integer constants (see above) which may be used in any arithmetic
     expression.
+=======
+    insensitive.
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
     To construct the boolean expression using the mask  as  the  boolean
     equal  operator  described above on a bit table column. For example,
@@ -6453,6 +6614,7 @@ usage. Also, the integer to real casts values to double precision:
     element in the constructed vector.
 
 
+<<<<<<< HEAD
 \subsection{Good Time Interval Filtering and Calculation}
 
     There are two functions for filtering and calculating based
@@ -6469,12 +6631,29 @@ usage. Also, the integer to real casts values to double precision:
     defined in a separate GTI extension.  gtifilter(a,b,c,d) evaluates
     each row of the input table and returns TRUE or FALSE depending
     whether the row is inside or outside the good time interval.  The
+=======
+\subsection{Good Time Interval Filtering}
+
+    A common filtering method involves selecting rows which have a time
+    value which lies within what is called a Good Time Interval or GTI.
+    The time intervals are defined in a separate FITS table extension
+    which contains 2 columns giving the start and stop time of each
+    good interval.  The filtering operation accepts only those rows of
+    the input table which have an associated time which falls within
+    one of the time intervals defined in the GTI extension. A high
+    level function, gtifilter(a,b,c,d), is available which evaluates
+    each row of the input table  and returns TRUE  or FALSE depending
+    whether the row is inside or outside the  good time interval.  The
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     syntax is
 
 \begin{verbatim}
       gtifilter( [ "gtifile" [, expr [, "STARTCOL", "STOPCOL" ] ] ] )
+<<<<<<< HEAD
     or
       gtifilter( [ 'gtifile' [, expr [, 'STARTCOL', 'STOPCOL' ] ] ] )
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 \end{verbatim}
     where  each "[]" demarks optional parameters.  Note that  the quotes
     around the gtifile and START/STOP column are required.  Either single
@@ -6512,6 +6691,7 @@ usage. Also, the integer to real casts values to double precision:
     searches   for   TIMEZERO/I/F   keywords  in  the  current  and  GTI
     extensions, applying a relative time offset, if necessary.
 
+<<<<<<< HEAD
     A separate function, gtioverlap(a,b,c,d,e), computes the overlap
     between a user-requested time range and the entries in a GTI.  The
     cases of no overlap, partial overlap, or overlap of many GTIs
@@ -6563,6 +6743,8 @@ usage. Also, the integer to real casts values to double precision:
     in each entry.  
 
 
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 \subsection{Spatial Region Filtering}
 

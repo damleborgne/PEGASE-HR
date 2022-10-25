@@ -3812,7 +3812,11 @@ int fffstru8(char *input,         /* I - array of values to be converted     */
             cptr++;
         }
 
+<<<<<<< HEAD
         if (*cptr == '.' || *cptr == ',')    /* check for decimal point */
+=======
+        if (*cptr == '.' || *cptr == ',')       /* check for decimal point */
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
         {
           decpt = 1;       /* set flag to show there was a decimal point */
           cptr++;

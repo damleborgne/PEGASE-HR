@@ -1,7 +1,7 @@
 Package PEGASE-HR, copyright 2004, D. Le Borgne et al.
 
-PEGASE-HR is portable of a wide range of Linux platform.
-It requires a Fortran f77 compiler and the cfitsio library.
+PEGASE-HR 2 is portable of a wide range of Linux platform.
+It requires a Fortran f90 compiler and the cfitsio library.
 
 
 ===============================================================================
@@ -9,14 +9,13 @@ PLATFORM REQUIREMENTS
 
 This distribution can be installed on virtually any Unix/Linux platform.
 The following tools are needed:
-   - A Fortran compiler (f77)
-     (if no such compiler is available we advice to use the GNU (free) g77)
+   - A Fortran compiler (f90)
+     (if no such compiler is available we advise to use the GNU (free) gfortran/gcc)
 
    - cfitsio library
      cfitsio is a high quality (free) library available from:
      http://heasarc.gsfc.nasa.gov/docs/software/fitsio/fitsio.html
-     It has become the standard library to access FITS files, it is easy
-     to install.
+     It should already be present in the package and used for the installation
 
 ===============================================================================
 INSTALLATION PROCEDURE
@@ -26,34 +25,32 @@ INSTALLATION PROCEDURE
 
   1) Configuration
 
-     Run:
-
+      ReBuild cfitsio : 
+      > cd cfitsio
+      > autoconf
+      > ./configure
+      > make
+      > cd ..
+      
+     Compile PEGASEHR:
+     > autoconf
      > ./configure
-
-     The package requires a f77 compiler. If none is available, you
-     will have first to install one. Check for example g77 which
-     can be installed on a wide range of platforms.
-
-     The package requires the cfitsio library. If it is not installed
-     in a standard location you may indicate the path to this library 
-     in the configure option --with libraries, as eg.:
-
-     > ./configure --with-libraries=/data1/pleinpot/lib/
-
-     If cfitsio is not available on the current machine, you have
-     to install it before intalling PEGASE-HR
+     > make
 
   2) Build the library and executable programs
      Run:
      >  make
      The executables are then located in the bin/ directory.
 
-  3) Test installation
-     You can test the installation by running 
-     > make test
-     This  will take a few minutes on a standard 1-1.5 GHz PC processor)
+  3) If necessary (e.g. Segmentation Fault and core dump when running SSPs_HR) : 
+     run "unlimit" under linux to avoid memory issues
 
-  4) Use PEGASE-HR
+  4) Test installation
+     You can test the installation by running 
+     > make_test
+     This  will take a few seconds 
+
+  5) Use PEGASE-HR
      The programs of PEGASE-HR can be executed from any directory, they
      read input files from the current directory and data files from
      the installation directory, and produce output files

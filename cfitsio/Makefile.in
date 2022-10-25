@@ -21,17 +21,30 @@
 PACKAGE		= cfitsio
 
 # CFITSIO version numbers:
+<<<<<<< HEAD
 CFITSIO_MAJOR   = @CFITSIO_MAJOR@
 CFITSIO_MINOR	= @CFITSIO_MINOR@
 CFITSIO_MICRO   = @CFITSIO_MICRO@
+=======
+CFITSIO_MAJOR	= @CFITSIO_MAJOR@
+CFITSIO_MINOR	= @CFITSIO_MINOR@
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 CFITSIO_SONAME	= @CFITSIO_SONAME@
 
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
+<<<<<<< HEAD
 CFITSIO_BIN	= ${DESTDIR}@bindir@
 CFITSIO_LIB	= ${DESTDIR}@libdir@
 CFITSIO_INCLUDE	= ${DESTDIR}@includedir@
 INSTALL_DIRS	= ${DESTDIR}@INSTALL_ROOT@ ${CFITSIO_INCLUDE} ${CFITSIO_LIB} ${CFITSIO_LIB}/pkgconfig
+=======
+DESTDIR		= 
+CFITSIO_BIN	= ${DESTDIR}@bindir@
+CFITSIO_LIB	= ${DESTDIR}@libdir@
+CFITSIO_INCLUDE	= ${DESTDIR}@includedir@
+INSTALL_DIRS	= @INSTALL_ROOT@ ${CFITSIO_INCLUDE} ${CFITSIO_LIB} ${CFITSIO_LIB}/pkgconfig
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 
 SHELL =		/bin/sh
@@ -57,7 +70,11 @@ CFITSIO_SHLIB_SONAME = @CFITSIO_SHLIB_SONAME@
 
 
 CORE_SOURCES = 	buffers.c cfileio.c checksum.c drvrfile.c drvrmem.c \
+<<<<<<< HEAD
 		drvrnet.c drvrsmem.c editcol.c edithdu.c eval_l.c \
+=======
+		drvrnet.c drvrsmem.c drvrgsiftp.c editcol.c edithdu.c eval_l.c \
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 		eval_y.c eval_f.c fitscore.c getcol.c getcolb.c getcold.c getcole.c \
 		getcoli.c getcolj.c getcolk.c getcoll.c getcols.c getcolsb.c \
 		getcoluk.c getcolui.c getcoluj.c getkey.c group.c grparser.c \
@@ -67,9 +84,17 @@ CORE_SOURCES = 	buffers.c cfileio.c checksum.c drvrfile.c drvrmem.c \
 		putcolu.c putcolui.c putcoluj.c putkey.c region.c scalnull.c \
 		swapproc.c wcssub.c wcsutil.c imcompress.c quantize.c ricecomp.c \
 		pliocomp.c fits_hcompress.c fits_hdecompress.c \
+<<<<<<< HEAD
 		simplerng.c @GSIFTP_SRC@
 
 ZLIB_SOURCES =	zcompress.c zuncompress.c
+=======
+		simplerng.c
+
+ZLIB_SOURCES =	zlib/adler32.c zlib/crc32.c zlib/deflate.c zlib/infback.c \
+		zlib/inffast.c zlib/inflate.c zlib/inftrees.c zlib/trees.c \
+		zlib/uncompr.c zlib/zcompress.c zlib/zuncompress.c zlib/zutil.c
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 SOURCES = ${CORE_SOURCES} ${ZLIB_SOURCES} @F77_WRAPPERS@
 
@@ -93,7 +118,11 @@ all:
 all-nofitsio:
 		${MAKE} stand_alone "FITSIO_SRC="
 
+<<<<<<< HEAD
 stand_alone:	lib${PACKAGE}.a shared
+=======
+stand_alone:	lib${PACKAGE}.a
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 lib${PACKAGE}.a:	${OBJECTS}
 		${ARCHIVE} $@ ${OBJECTS}; \
@@ -102,7 +131,11 @@ lib${PACKAGE}.a:	${OBJECTS}
 shared: lib${PACKAGE}${SHLIB_SUFFIX}
 
 lib${PACKAGE}${SHLIB_SUFFIX}: ${OBJECTS}
+<<<<<<< HEAD
 		${SHLIB_LD} ${LDFLAGS} -o ${CFITSIO_SHLIB} ${OBJECTS} -lm ${LIBS_CURL} ${LIBS}
+=======
+		${SHLIB_LD} ${LDFLAGS} -o ${CFITSIO_SHLIB} ${OBJECTS} -lm ${LIBS}
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 		@if [ "x${CFITSIO_SHLIB_SONAME}" != x ]; then \
 			ln -sf ${CFITSIO_SHLIB} ${CFITSIO_SHLIB_SONAME}; \
 			ln -sf ${CFITSIO_SHLIB_SONAME} $@; \
@@ -133,7 +166,10 @@ UTILS		= cookbook fitscopy imcopy smem speed testprog
 
 FPACK_UTILS	= fpack funpack
 
+<<<<<<< HEAD
 # Optional build target:
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 utils:		${FPACK_UTILS} ${UTILS}
 
 swapproc.o:	swapproc.c
@@ -162,9 +198,12 @@ imcopy:		imcopy.o lib${PACKAGE}.a ${OBJECTS}
 
 cookbook:	cookbook.o lib${PACKAGE}.a ${OBJECTS}
 		${CC} ${LDFLAGS_BIN} ${DEFS} -o $@ ${@}.o -L. -l${PACKAGE} -lm ${LIBS}
+<<<<<<< HEAD
 
 testf77:	testf77.o lib${PACKAGE}.a ${OBJECTS}
 		${FC} ${LDFLAGS_BIN} -o $@ ${@}.o -L. -l${PACKAGE} -lm ${LIBS}
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 eval:		# Rebuild eval_* files from flex/bison source
 		${FLEX} -t eval.l > eval_l.c1
@@ -178,7 +217,11 @@ eval:		# Rebuild eval_* files from flex/bison source
 
 clean:
 	-	/bin/rm -rf *.o zlib/*.o *.dSYM lib${PACKAGE}* y.output so_locations \
+<<<<<<< HEAD
 		${UTILS} ${FPACK_UTILS} testprog.fit testf77
+=======
+		${UTILS} ${FPACK_UTILS} testprog.fit
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 distclean:	clean
 	-	/bin/rm -f Makefile cfitsio.pc config.log config.status configure.lineno

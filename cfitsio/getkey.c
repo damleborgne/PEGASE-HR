@@ -943,17 +943,24 @@ int ffgkls( fitsfile *fptr,     /* I - FITS file pointer             */
             else
 	    {
                 contin = 0;
+<<<<<<< HEAD
                 /* Without this, for case of a last CONTINUE statement ending
                    with a '&', nextcomm would retain the same string from 
                    from the previous loop iteration and the comment
                    would get concantenated twice. */
                 nextcomm[0] = 0;
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
             }
 
             /* concantenate comment strings (if any) */
 	    if ((commspace > 0) && (*nextcomm != 0)) 
 	    {
+<<<<<<< HEAD
                 strcat(comm, " ");
+=======
+                strncat(comm, " ", 1);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 		strncat(comm, nextcomm, commspace);
                 commspace = FLEN_COMMENT - strlen(comm) - 2;
             }
@@ -1052,17 +1059,24 @@ int ffgsky( fitsfile *fptr,     /* I - FITS file pointer             */
             else
 	    {
                 contin = 0;
+<<<<<<< HEAD
                 /* Without this, for case of a last CONTINUE statement ending
                    with a '&', nextcomm would retain the same string from 
                    from the previous loop iteration and the comment
                    would get concantenated twice. */
                 nextcomm[0] = 0;
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
             }
 
             /* concantenate comment strings (if any) */
 	    if ((commspace > 0) && (*nextcomm != 0)) 
 	    {
+<<<<<<< HEAD
                 strcat(comm, " ");
+=======
+                strncat(comm, " ", 1);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 		strncat(comm, nextcomm, commspace);
                 commspace = FLEN_COMMENT - strlen(comm) - 2;
             }
@@ -1495,10 +1509,13 @@ int ffgkns( fitsfile *fptr,     /* I - FITS file pointer                    */
           equalssign = strchr(card, '=');
 	  if (equalssign == 0) continue;  /* keyword has no value */
 
+<<<<<<< HEAD
           if (equalssign - card - lenroot > 7)
           {
              return (*status=BAD_KEYCHAR);
           }
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
           strncat(keyindex, &card[lenroot], equalssign - card  - lenroot);  /*  copy suffix  */
           tstatus = 0;
           if (ffc2ii(keyindex, &ival, &tstatus) <= 0)     /*  test suffix  */
@@ -1576,10 +1593,13 @@ int ffgknl( fitsfile *fptr,     /* I - FITS file pointer                    */
           equalssign = strchr(card, '=');
 	  if (equalssign == 0) continue;  /* keyword has no value */
 
+<<<<<<< HEAD
           if (equalssign - card - lenroot > 7)
           {
              return (*status=BAD_KEYCHAR);
           }
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
           strncat(keyindex, &card[lenroot], equalssign - card  - lenroot);  /*  copy suffix  */
 
           tstatus = 0;
@@ -1657,10 +1677,13 @@ int ffgknj( fitsfile *fptr,     /* I - FITS file pointer                    */
           equalssign = strchr(card, '=');
 	  if (equalssign == 0) continue;  /* keyword has no value */
 
+<<<<<<< HEAD
           if (equalssign - card - lenroot > 7)
           {
              return (*status=BAD_KEYCHAR);
           }
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
           strncat(keyindex, &card[lenroot], equalssign - card  - lenroot);  /*  copy suffix  */
 
           tstatus = 0;
@@ -1738,10 +1761,13 @@ int ffgknjj( fitsfile *fptr,    /* I - FITS file pointer                    */
           equalssign = strchr(card, '=');
 	  if (equalssign == 0) continue;  /* keyword has no value */
 
+<<<<<<< HEAD
           if (equalssign - card - lenroot > 7)
           {
              return (*status=BAD_KEYCHAR);
           }
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
           strncat(keyindex, &card[lenroot], equalssign - card  - lenroot);  /*  copy suffix  */
 
           tstatus = 0;
@@ -1819,10 +1845,13 @@ int ffgkne( fitsfile *fptr,     /* I - FITS file pointer                    */
           equalssign = strchr(card, '=');
 	  if (equalssign == 0) continue;  /* keyword has no value */
 
+<<<<<<< HEAD
           if (equalssign - card - lenroot > 7)
           {
              return (*status=BAD_KEYCHAR);
           }
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
           strncat(keyindex, &card[lenroot], equalssign - card  - lenroot);  /*  copy suffix  */
 
           tstatus = 0;
@@ -1899,10 +1928,13 @@ int ffgknd( fitsfile *fptr,     /* I - FITS file pointer                    */
           equalssign = strchr(card, '=');
 	  if (equalssign == 0) continue;  /* keyword has no value */
 
+<<<<<<< HEAD
           if (equalssign - card - lenroot > 7)
           {
              return (*status=BAD_KEYCHAR);
           }
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
           strncat(keyindex, &card[lenroot], equalssign - card  - lenroot);  /*  copy suffix  */
           tstatus = 0;
           if (ffc2ii(keyindex, &ival, &tstatus) <= 0)      /*  test suffix */
@@ -1993,7 +2025,11 @@ int ffdtdm(fitsfile *fptr,  /* I - FITS file pointer                        */
 */
 {
     long dimsize, totalpix = 1;
+<<<<<<< HEAD
     char *loc, *lastloc, message[FLEN_ERRMSG];
+=======
+    char *loc, *lastloc, message[81];
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     tcolumn *colptr = 0;
 
     if (*status > 0)
@@ -2024,7 +2060,11 @@ int ffdtdm(fitsfile *fptr,  /* I - FITS file pointer                        */
     loc = strchr(tdimstr, '(' );  /* find the opening quote */
     if (!loc)
     {
+<<<<<<< HEAD
             snprintf(message, FLEN_ERRMSG, "Illegal dimensions format: %s", tdimstr);
+=======
+            sprintf(message, "Illegal dimensions format: %s", tdimstr);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
             return(*status = BAD_TDIM);
     }
 
@@ -2051,7 +2091,11 @@ int ffdtdm(fitsfile *fptr,  /* I - FITS file pointer                        */
     loc = strchr(lastloc, ')' );  /* check for the closing quote */
     if (!loc)
     {
+<<<<<<< HEAD
             snprintf(message, FLEN_ERRMSG, "Illegal dimensions format: %s", tdimstr);
+=======
+            sprintf(message, "Illegal dimensions format: %s", tdimstr);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
             return(*status = BAD_TDIM);
     }
 

@@ -33,7 +33,10 @@ int main(int argc, char *argv[])
 int fp_get_param (int argc, char *argv[], fpstate *fpptr)
 {
 	int	gottype=0, gottile=0, wholetile=0, iarg, len, ndim, ii, doffset;
+<<<<<<< HEAD
         int     gotR=0, gotO=0;
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 	char	tmp[SZ_STR], tile[SZ_STR];
 
         if (fpptr->initialized != FP_INIT_MAGIC) {
@@ -192,6 +195,7 @@ int fp_get_param (int argc, char *argv[], fpstate *fpptr)
 		} else if (!strcmp(argv[iarg], "-tableonly")) {
 		    fpptr->do_tables = 1;
 		    fpptr->do_images = 0;
+<<<<<<< HEAD
                     /* Do not write this to stdout via fp_msg.  Otherwise it will be placed at start of piped FITS
                        file, which will then be corrupted. */
                     fprintf(stderr, "Note: The table compression method used by fpack has been\n");
@@ -205,6 +209,13 @@ int fp_get_param (int argc, char *argv[], fpstate *fpptr)
 		    fprintf(stderr, " officially approved as part of FITS format standard since 2016.\n");
 		    fprintf(stderr, " However users should be aware that the compressed table files may\n");
 		    fprintf(stderr, " only be readable by a limited number of applications (including fpack).\n");
+=======
+		    fp_msg ("Note: -tableonly is intended for feasibility studies, not general use.\n");
+
+		} else if (!strcmp(argv[iarg], "-table")) {
+		    fpptr->do_tables = 1;
+		    fp_msg ("Note: -table is intended for feasibility studies, not general use.\n");
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 		} else if (argv[iarg][1] == 't') {
 		    if (gottile) {
@@ -361,7 +372,11 @@ int fp_usage (void)
 fp_msg ("usage: fpack ");
 fp_msg (
 "[-r|-h|-g|-p] [-w|-t <axes>] [-q <level>] [-s <scale>] [-n <noise>] -v <FITS>\n");
+<<<<<<< HEAD
 fp_msg ("more:   [-T] [-R] [-F] [-D] [-Y] [-O <file>] [-S] [-L] [-C] [-H] [-V] [-i2f]\n");
+=======
+fp_msg ("more:   [-T] [-R] [-F] [-D] [-Y] [-S] [-L] [-C] [-H] [-V] [-i2f]\n");
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 return(0);
 }
 
@@ -437,8 +452,11 @@ fp_msg (" -F          Overwrite input file by output file with same name.\n");
 fp_msg (" -D          Delete input file after writing output.\n");
 fp_msg (" -Y          Suppress prompts to confirm -F or -D options.\n");
 
+<<<<<<< HEAD
 fp_msg (" -O <file>   Specify full output file name. This may be used only when fpack\n");
 fp_msg ("               is run on a single input file.\n");
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 fp_msg (" -S          Output compressed FITS files to STDOUT.\n");
 fp_msg (" -L          List contents; files unchanged.\n");
 

@@ -50,7 +50,11 @@ extern int Fitsio_Pthread_Status;
 
 #define DBUFFSIZE 28800 /* size of data buffer in bytes */
 
+<<<<<<< HEAD
 #define NMAXFILES  10000   /* maximum number of FITS files that can be opened */
+=======
+#define NMAXFILES  1000   /* maximum number of FITS files that can be opened */
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
         /* CFITSIO will allocate (NMAXFILES * 80) bytes of memory */
 	/* plus each file that is opened will use NIOBUF * 2880 bytes of memeory */
 	/* where NIOBUF is defined in fitio.h and has a default value of 40 */
@@ -217,7 +221,11 @@ extern int Fitsio_Pthread_Status;
 #else
 #define BYTESWAPPED FALSE
 #endif
+<<<<<<< HEAD
 
+=======
+ 
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 #else
 
 /*  assume all other machine uses the same IEEE formats as used in FITS files */
@@ -357,7 +365,10 @@ int ffd2f(double dval, int decim, char *cval, int *status);
 int ffd2e(double dval, int decim, char *cval, int *status);
 int ffc2ii(const char *cval, long *ival, int *status);
 int ffc2jj(const char *cval, LONGLONG *ival, int *status);
+<<<<<<< HEAD
 int ffc2ujj(const char *cval, ULONGLONG *ival, int *status);
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 int ffc2ll(const char *cval, int *lval, int *status);
 int ffc2rr(const char *cval, float *fval, int *status);
 int ffc2dd(const char *cval, double *dval, int *status);
@@ -365,12 +376,18 @@ int ffc2x(const char *cval, char *dtype, long *ival, int *lval, char *sval,
           double *dval, int *status);
 int ffc2xx(const char *cval, char *dtype, LONGLONG *ival, int *lval, char *sval,
           double *dval, int *status);
+<<<<<<< HEAD
 int ffc2uxx(const char *cval, char *dtype, ULONGLONG *ival, int *lval, char *sval,
           double *dval, int *status);
 int ffc2s(const char *instr, char *outstr, int *status);
 int ffc2i(const char *cval, long *ival, int *status);
 int ffc2j(const char *cval, LONGLONG *ival, int *status);
 int ffc2uj(const char *cval, ULONGLONG *ival, int *status);
+=======
+int ffc2s(const char *instr, char *outstr, int *status);
+int ffc2i(const char *cval, long *ival, int *status);
+int ffc2j(const char *cval, LONGLONG *ival, int *status);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 int ffc2r(const char *cval, float *fval, int *status);
 int ffc2d(const char *cval, double *dval, int *status);
 int ffc2l(const char *cval, int *lval, int *status);
@@ -1111,9 +1128,12 @@ int fitsio_init_lock(void);
 /* general driver routines */
 
 int urltype2driver(char *urltype, int *driver);
+<<<<<<< HEAD
 
 void fits_dwnld_prog_bar(int flag);
 int fits_net_timeout(int sec);
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 int fits_register_driver( char *prefix,
 	int (*init)(void),

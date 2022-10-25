@@ -356,7 +356,10 @@ int ffpclb( fitsfile *fptr,  /* I - FITS file pointer                       */
   and will be inverse-scaled by the FITS TSCALn and TZEROn values if necessary.
 */
 {
+<<<<<<< HEAD
     int writemode;
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     int tcode, maxelem2, hdutype, writeraw;
     long twidth, incre;
     long  ntodo;
@@ -378,6 +381,7 @@ int ffpclb( fitsfile *fptr,  /* I - FITS file pointer                       */
     /*---------------------------------------------------*/
     /*  Check input and get parameters about the column: */
     /*---------------------------------------------------*/
+<<<<<<< HEAD
 
     /* IMPORTANT NOTE: that the special case of using this subroutine
        to write bytes to a character column are handled internally
@@ -387,6 +391,9 @@ int ffpclb( fitsfile *fptr,  /* I - FITS file pointer                       */
     writemode = 17; /* Equivalent to writemode = 1 but allow TSTRING -> TBYTE */
 
     if (ffgcprll( fptr, colnum, firstrow, firstelem, nelem, writemode, &scale, &zero,
+=======
+    if (ffgcprll( fptr, colnum, firstrow, firstelem, nelem, 1, &scale, &zero,
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
         tform, &twidth, &tcode, &maxelem2, &startpos,  &elemnum, &incre,
         &repeat, &rowlen, &hdutype, &tnull, snull, status) > 0)
         return(*status);

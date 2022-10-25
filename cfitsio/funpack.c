@@ -68,6 +68,12 @@ int fu_get_param (int argc, char *argv[], fpstate *fpptr)
                         fpptr->extname[SZ_STR-1]=0;
                     }
 
+		} else if (argv[iarg][1] == 'E') {
+		    if (++iarg >= argc) {
+			fu_usage (); fu_hint (); exit (-1);
+		    } else
+			strncpy (fpptr->extname, argv[iarg], SZ_STR);
+
 		} else if (argv[iarg][1] == 'S') {
 		    fpptr->to_stdout++;
 

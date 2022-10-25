@@ -986,6 +986,7 @@ int ffu4fstr(unsigned long *input, /* I - array of values to be converted */
     /* replace any commas with periods (e.g., in French locale) */
     while ((cptr = strchr(cptr, ','))) *cptr = '.';
     
+<<<<<<< HEAD
     return(*status);
 }
 
@@ -1962,5 +1963,7 @@ int ffu8fstr(ULONGLONG *input, /* I - array of values to be converted */
     /* replace any commas with periods (e.g., in French locale) */
     while ((cptr = strchr(cptr, ','))) *cptr = '.';
     
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     return(*status);
 }

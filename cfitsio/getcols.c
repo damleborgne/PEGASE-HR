@@ -591,9 +591,15 @@ int ffgcls( fitsfile *fptr,   /* I - FITS file pointer                       */
            else
            {	   
               if (intcol) {
+<<<<<<< HEAD
                 snprintf(tmpstr, 400,cform, (int) darray[ii]);
               } else {
                 snprintf(tmpstr, 400,cform, darray[ii]);
+=======
+                sprintf(tmpstr, cform, (int) darray[ii]);
+              } else {
+                sprintf(tmpstr, cform, darray[ii]);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
               }
 	      
               /* fill field with '*' if number is too wide */

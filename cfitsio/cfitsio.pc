@@ -5,8 +5,14 @@ includedir=${prefix}/include
 
 Name: cfitsio
 Description: FITS File Subroutine Library
+<<<<<<< HEAD
 URL: https://heasarc.gsfc.nasa.gov/fitsio/
 Version: 4.1.0
 Libs: -L${libdir} -lcfitsio
 Libs.private: -lm -lz 
+=======
+Version: 3.41
+Libs: -L${libdir} -lcfitsio 
+Libs.private: -lm
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 Cflags: -I${includedir}

@@ -574,7 +574,10 @@
 #define fits_insert_cols  fficls
 #define fits_delete_col   ffdcol
 #define fits_copy_col     ffcpcl
+<<<<<<< HEAD
 #define fits_copy_cols    ffccls
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 #define fits_copy_rows    ffcprw
 #define fits_modify_vector_len  ffmvec
 

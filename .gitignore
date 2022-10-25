@@ -35,9 +35,22 @@ config.log
 config.status
 make.rules
 make.sys
-#cfitsio/config.status
-#cfitsio/config.log
-#Makefile
-#cfitsio/Makefile
+configure
+peg_*
+
+cfitsio/cfitsio.pc
+cfitsio/config.status
+cfitsio/config.log
+cfitsio/Makefile
+
 
 configure
+
+bin/*
+src/*
+!src/*.f90
+src/peg_config.f*
+data/tests/test_tmp/*
+autom4te.cache
+
+.DS_Store

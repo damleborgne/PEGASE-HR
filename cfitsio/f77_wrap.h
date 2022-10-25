@@ -18,9 +18,13 @@
     ||  defined (__x86_64__) \
     ||  defined (_SX) \
     ||  defined (__powerpc64__)\
+<<<<<<< HEAD
     ||  defined (__s390x__)\
     || (defined(__arm64__) && defined(__APPLE__)) \
     ||  defined(__aarch64__) 
+=======
+    ||  defined (__s390x__)
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
 #define   LONG8BYTES_INT4BYTES
 

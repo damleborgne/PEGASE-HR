@@ -694,7 +694,11 @@ fitsfile *ffhist3(fitsfile *fptr, /* I - ptr to table with X and Y cols*/
     fitsfile *histptr;
     int   bitpix, colnum[4], wtcolnum;
     long haxes[4];
+<<<<<<< HEAD
     double amin[4], amax[4], binsize[4],  weight;
+=======
+    float amin[4], amax[4], binsize[4],  weight;
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
     if (*status > 0)
         return(NULL);
@@ -728,7 +732,11 @@ fitsfile *ffhist3(fitsfile *fptr, /* I - ptr to table with X and Y cols*/
     /*    Calculate the binning parameters:    */
     /*   columm numbers, axes length, min values,  max values, and binsizes.  */
 
+<<<<<<< HEAD
     if (fits_calc_binningd(
+=======
+    if (fits_calc_binning(
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
       fptr, naxis, colname, minin, maxin, binsizein, minname, maxname, binname,
       colnum, haxes, amin, amax, binsize, status) > 0)
     {
@@ -740,7 +748,11 @@ fitsfile *ffhist3(fitsfile *fptr, /* I - ptr to table with X and Y cols*/
     if (*wtcol)
     {
         /* first, look for a keyword with the weight value */
+<<<<<<< HEAD
         if (fits_read_key(fptr, TDOUBLE, wtcol, &weight, NULL, status) )
+=======
+        if (fits_read_key(fptr, TFLOAT, wtcol, &weight, NULL, status) )
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
         {
             /* not a keyword, so look for column with this name */
             *status = 0;
@@ -754,6 +766,7 @@ fitsfile *ffhist3(fitsfile *fptr, /* I - ptr to table with X and Y cols*/
                return(NULL);
             }
 
+<<<<<<< HEAD
             weight = DOUBLENULLVALUE;
         }
     }
@@ -761,15 +774,30 @@ fitsfile *ffhist3(fitsfile *fptr, /* I - ptr to table with X and Y cols*/
         weight = (double) weightin;
 
     if (weight <= 0. && weight != DOUBLENULLVALUE)
+=======
+            weight = FLOATNULLVALUE;
+        }
+    }
+    else
+        weight = (float) weightin;
+
+    if (weight <= 0. && weight != FLOATNULLVALUE)
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     {
         ffpmsg("Illegal histogramming weighting factor <= 0.");
 	*status = URL_PARSE_ERROR;
         return(NULL);
     }
 
+<<<<<<< HEAD
     if (recip && weight != DOUBLENULLVALUE)
        /* take reciprocal of weight */
        weight = (double) (1.0 / weight);
+=======
+    if (recip && weight != FLOATNULLVALUE)
+       /* take reciprocal of weight */
+       weight = (float) (1.0 / weight);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
     /* size of histogram is now known, so create temp output file */
     if (fits_create_file(&histptr, outfile, status) > 0)
@@ -796,10 +824,17 @@ fitsfile *ffhist3(fitsfile *fptr, /* I - ptr to table with X and Y cols*/
     fits_write_keys_histo(fptr, histptr, naxis, colnum, status);
     
     /* update the WCS keywords for the ref. pixel location, and pixel size */
+<<<<<<< HEAD
     fits_rebin_wcsd(histptr, naxis, amin, binsize,  status);      
     
     /* now compute the output image by binning the column values */
     if (fits_make_histd(fptr, histptr, bitpix, naxis, haxes, colnum, amin, amax,
+=======
+    fits_rebin_wcs(histptr, naxis, amin, binsize,  status);      
+    
+    /* now compute the output image by binning the column values */
+    if (fits_make_hist(fptr, histptr, bitpix, naxis, haxes, colnum, amin, amax,
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
         binsize, weight, wtcolnum, recip, selectrow, status) > 0)
     {
         ffpmsg("failed to calculate new histogram values");
@@ -2183,7 +2218,11 @@ int fits_make_histd(fitsfile *fptr, /* IO - pointer to table with X and Y cols; 
 
     for (ii = 0; ii < naxis; ii++)
     {
+<<<<<<< HEAD
       taxes[ii] = (double) naxes[ii];
+=======
+      taxes[ii] = (float) naxes[ii];
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
       tmin[ii] = amin[ii];
       tmax[ii] = amax[ii];
       if ( (amin[ii] > amax[ii] && binsize[ii] > 0. ) ||

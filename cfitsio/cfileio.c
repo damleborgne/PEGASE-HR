@@ -54,7 +54,10 @@ static int find_doublequote(char **string);
 static int find_paren(char **string);
 static int find_bracket(char **string);
 static int find_curlybracket(char **string);
+<<<<<<< HEAD
 static int standardize_path(char *fullpath, int *status);
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 int comma2semicolon(char *string);
 
 #ifdef _REENTRANT
@@ -416,7 +419,11 @@ int ffeopn(fitsfile **fptr,      /* O - FITS file pointer                   */
   none are found, then simply move to the 2nd extension.
 */
 {
+<<<<<<< HEAD
     int hdunum, naxis = 0, thdutype, gotext=0;
+=======
+    int hdunum, naxis, thdutype, gotext=0;
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     char *ext, *textlist;
     char *saveptr;
   
@@ -426,6 +433,7 @@ int ffeopn(fitsfile **fptr,      /* O - FITS file pointer                   */
     if (ffopen(fptr, name, mode, status) > 0)
         return(*status);
 
+<<<<<<< HEAD
     fits_get_hdu_num(*fptr, &hdunum);
     fits_get_hdu_type(*fptr, &thdutype, status);
     if (hdunum == 1 && thdutype == IMAGE_HDU) {
@@ -435,6 +443,13 @@ int ffeopn(fitsfile **fptr,      /* O - FITS file pointer                   */
     /* We are in the "default" primary extension */
     /* look through the extension list */
     if( (hdunum == 1) && (naxis == 0) ){ 
+=======
+    fits_get_hdu_num(*fptr, &hdunum); 
+    fits_get_img_dim(*fptr, &naxis, status);
+
+    if( (hdunum == 1) && (naxis == 0) ){ 
+      /* look through the extension list */
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
       if( extlist ){
         gotext = 0;
 	textlist = malloc(strlen(extlist) + 1);
@@ -461,9 +476,13 @@ int ffeopn(fitsfile **fptr,      /* O - FITS file pointer                   */
         fits_movabs_hdu(*fptr, 2, &thdutype, status);
       }
     }
+<<<<<<< HEAD
     if (hdutype) {
       fits_get_hdu_type(*fptr, hdutype, status);
     }
+=======
+    fits_get_hdu_type(*fptr, hdutype, status);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     return(*status);
 }
 /*--------------------------------------------------------------------------*/
@@ -1515,6 +1534,13 @@ int fits_already_open(fitsfile **fptr, /* I/O - FITS file pointer       */
 */ 
     if (mode == 0)
         return(*status);
+<<<<<<< HEAD
+=======
+
+    if(fits_strcasecmp(urltype,"FILE://") == 0)
+      {
+        fits_path2url(infile,tmpinfile,status);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
     strcpy(tmpinfile, infile);
     if(fits_strcasecmp(urltype,"FILE://") == 0)
@@ -1531,8 +1557,17 @@ int fits_already_open(fitsfile **fptr, /* I/O - FITS file pointer       */
           
           if (oldFptr->noextsyntax)
           {
+<<<<<<< HEAD
             /* old urltype must be "file://" */
             if (fits_strcasecmp(urltype,"FILE://") == 0)
+=======
+            ffpmsg("could not parse the previously opened filename: (ffopen)");
+            ffpmsg(oldFptr->filename);
+            return(*status);
+          }
+
+          if(fits_strcasecmp(oldurltype,"FILE://") == 0)
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
             {
                /* compare tmpinfile to adjusted oldFptr->filename */
                
@@ -1918,7 +1953,11 @@ int ffedit_columns(
     fitsfile *newptr;
     int ii, hdunum, slen, colnum = -1, testnum, deletecol = 0, savecol = 0;
     int numcols = 0, *colindex = 0, tstatus = 0;
+<<<<<<< HEAD
     char *tstbuff=0, *cptr, *cptr2, *cptr3, *clause = NULL, keyname[FLEN_KEYWORD];
+=======
+    char *cptr, *cptr2, *cptr3, *clause = NULL, keyname[FLEN_KEYWORD];
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     char colname[FLEN_VALUE], oldname[FLEN_VALUE], colformat[FLEN_VALUE];
     char *file_expr = NULL, testname[FLEN_VALUE], card[FLEN_CARD];
 
@@ -2115,6 +2154,7 @@ int ffedit_columns(
 	        ffcmsg();   /* clear previous error message from ffgcno */
                 /* try deleting a keyword with this name */
                 *status = 0;
+<<<<<<< HEAD
 		/* skip past leading '#' if any */
 		if (clause1[0] == '#') clause1++;
 		clen = strlen(clause1);
@@ -2158,6 +2198,17 @@ int ffedit_columns(
 		      }
 		    }
 		} while(delall); /* end do{} */
+=======
+                if (ffdkey(*fptr, &clause[1], status) > 0)
+                {
+                    ffpmsg("column or keyword to be deleted does not exist:");
+                    ffpmsg(clause);
+                    if( colindex ) free( colindex );
+                    if( file_expr ) free( file_expr );
+		    if( clause ) free(clause);
+                    return(*status);
+                }
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
             }
         }
         else
@@ -2175,13 +2226,18 @@ int ffedit_columns(
             cptr2 = clause;
             slen = fits_get_token2(&cptr2, "( =", &tstbuff, NULL, status);
 
+<<<<<<< HEAD
             if (slen == 0 || *status)
+=======
+            if (slen == 0)
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
             {
                 ffpmsg("error: column or keyword name is blank (ffedit_columns):");
                 ffpmsg(clause);
                 if( colindex ) free( colindex );
                 if( file_expr ) free( file_expr );
 		if (clause) free(clause);
+<<<<<<< HEAD
                 if (*status==0)
                    *status=URL_PARSE_ERROR;
                 return(*status);
@@ -2194,6 +2250,8 @@ int ffedit_columns(
                 if( file_expr ) free( file_expr );
 		if (clause) free(clause);
                 free(tstbuff);
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
                 return(*status= URL_PARSE_ERROR);
             }
             strcpy(colname, tstbuff);
@@ -5063,6 +5121,7 @@ int fits_init_cfitsio(void)
         return(status);
     }
 
+<<<<<<< HEAD
 #ifdef HAVE_NET_SERVICES
 
     /* 25--------------------https  driver-----------------------*/
@@ -5262,6 +5321,8 @@ int fits_init_cfitsio(void)
 #endif
 
 
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
     /* reset flag.  Any other threads will now not need to call this routine */
     need_to_initialize = 0;
 
@@ -5399,6 +5460,10 @@ int ffifile2(char *url,       /* input filename */
     char *ptr1, *ptr2, *ptr3, *ptr4, *tmptr;
     int hasAt, hasDot, hasOper, followingOper, spaceTerm, rowFilter;
     int colStart, binStart, pixStart, compStart;
+<<<<<<< HEAD
+=======
+
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 
     /* must have temporary variable for these, in case inputs are NULL */
     char *infile;

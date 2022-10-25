@@ -5,21 +5,17 @@
 # else than the authors of the PEGASE-HR code.
 #-----------------------------------------------------------
 
+cd data/tests/
+cp -f ../user_defined/ages.dat .
+
 rm -rf test_tmp/*
 
 # computes the test files, in ./test/
 # Please ignore the error messages.
-data/tests/do_test.tcsh nostop
+do_test.tcsh nostop
 
 # copies the computed test files into data/tests/ for reference by future tests
-cp -f data/user_defined/ages.dat data/tests/
-
-#cp -f test_tmp/Salp_test_tracksZ0.02.dat data/tests/
-#cp -f test_tmp/Salp_test_tracksZ0.0001.dat data/tests/
-
-cp -f test_tmp/test_1.fits data/tests/
-cp -f test_tmp/test_2.fits data/tests/
-cp -f test_tmp/test_ELO.fits data/tests/
-lick test_tmp/test_ELO.fits 5.
-cp -f test_tmp/test_ELO.fits data/tests/
+# cp -f test_tmp/test_1.fits ./
+# cp -f test_tmp/test_2.fits ./
+# cp -f test_tmp/test_ELO.fits ./
 

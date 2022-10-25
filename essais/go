@@ -1,0 +1,2 @@
+#!/bin/tcsh
+setenv OMP_NUM_THREADS 4; rm -f *.fits ; spectra_HR testhr.scn

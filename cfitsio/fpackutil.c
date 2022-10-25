@@ -63,6 +63,7 @@ void fp_abort_output (fitsfile *infptr, fitsfile *outfptr, int stat)
 	int status = 0, hdunum;
 	char  msg[SZ_STR];
 
+<<<<<<< HEAD
         if (infptr)
         {
 	   fits_file_name(infptr, tempfilename, &status);
@@ -80,6 +81,18 @@ void fp_abort_output (fitsfile *infptr, fitsfile *outfptr, int stat)
            snprintf(msg, SZ_STR,"Error: Unable to process input file\n");
            fp_msg(msg);
         }
+=======
+	fits_file_name(infptr, tempfilename, &status);
+	fits_get_hdu_num(infptr, &hdunum);
+	
+        fits_close_file (infptr, &status);
+
+	sprintf(msg, "Error processing file: %s\n", tempfilename);
+	fp_msg (msg);
+	sprintf(msg, "  in HDU number %d\n", hdunum);
+	fp_msg (msg);
+
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 	fits_report_error (stderr, stat);
 
 	if (outfptr) {
@@ -97,7 +110,11 @@ int fp_version (void)
 
         fp_msg (FPACK_VERSION);
         fits_get_version(&version);
+<<<<<<< HEAD
         snprintf(cfitsioversion, 40," CFITSIO version %5.3f", version);
+=======
+        sprintf(cfitsioversion, " CFITSIO version %5.3f", version);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
         fp_msg(cfitsioversion);
         fp_msg ("\n");
         return(0);
@@ -126,7 +143,11 @@ int fp_tmpnam(char *suffix, char *rootname, char *tmpnam)
 	int maxtry = 30, ii;
 
 	if (strlen(suffix) + strlen(rootname) > SZ_STR-5) {
+<<<<<<< HEAD
 	    fp_msg ("Error: filename is too long to create temporary file\n"); exit (-1);
+=======
+	    fp_msg ("Error: filename is too long to create tempory file\n"); exit (-1);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 	}
 
 	strcpy (tmpnam, rootname);  /* start with rootname */
@@ -136,6 +157,7 @@ int fp_tmpnam(char *suffix, char *rootname, char *tmpnam)
 
         for (ii = 0; ii < maxtry; ii++) {
 		if (fp_access(tmpnam)) break;  /* good, the file does not exist */
+<<<<<<< HEAD
                 if (strlen(tmpnam) > SZ_STR-2)
                 {
 		   fp_msg ("\nCould not create temporary file name:\n");
@@ -143,6 +165,8 @@ int fp_tmpnam(char *suffix, char *rootname, char *tmpnam)
 		   fp_msg ("\n");
 		   exit (-1);
                 }
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 		strcat(tmpnam, "x");  /* append an x to the name, and try again */
 	}
 
@@ -243,6 +267,7 @@ int fp_list (int argc, char *argv[], fpstate fpvar)
 	        fp_abort_output(infptr, NULL, stat);
 	    }
 
+<<<<<<< HEAD
             snprintf (msg, SZ_STR,"# %s (", infits); fp_msg (msg);
 
 #if defined(_MSC_VER)
@@ -252,6 +277,17 @@ int fp_list (int argc, char *argv[], fpstate fpvar)
         snprintf(msg, SZ_STR,"%lld bytes)\n", sizell); fp_msg (msg);
 #else
         snprintf(msg, SZ_STR,"%ld bytes)\n", sizell); fp_msg (msg);
+=======
+            sprintf (msg, "# %s (", infits); fp_msg (msg);
+
+#if defined(_MSC_VER)
+    /* Microsoft Visual C++ 6.0 uses '%I64d' syntax  for 8-byte integers */
+        sprintf(msg, "%I64d bytes)\n", sizell); fp_msg (msg);
+#elif (USE_LL_SUFFIX == 1)
+        sprintf(msg, "%lld bytes)\n", sizell); fp_msg (msg);
+#else
+        sprintf(msg, "%ld bytes)\n", sizell); fp_msg (msg);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 #endif
 	    fp_info_hdu (infptr);
 
@@ -303,6 +339,7 @@ int fp_info_hdu (fitsfile *infptr)
             fits_get_chksum(infptr, &datasum, &hdusum, &stat);
 
 	    if (hdutype == IMAGE_HDU) {
+<<<<<<< HEAD
 		snprintf (msg, SZ_STR,"  %d IMAGE", hdupos); fp_msg (msg);
                 snprintf (msg, SZ_STR," SUMS=%lu/%lu", (unsigned long) (~((int) hdusum)), datasum); fp_msg (msg);
 
@@ -318,6 +355,23 @@ int fp_info_hdu (fitsfile *infptr)
 		    snprintf (msg, SZ_STR," [%ld", naxes[0]); fp_msg (msg);
 		    for (ii=1; ii < naxis; ii++) {
 			snprintf (msg, SZ_STR,"x%ld", naxes[ii]); fp_msg (msg);
+=======
+		sprintf (msg, "  %d IMAGE", hdupos); fp_msg (msg);
+                sprintf (msg, " SUMS=%lu/%lu", (unsigned long) (~((int) hdusum)), datasum); fp_msg (msg);
+
+		fits_get_img_param (infptr, 9, &bitpix, &naxis, naxes, &stat);
+
+                sprintf (msg, " BITPIX=%d", bitpix); fp_msg (msg);
+
+		if (naxis == 0) {
+                    sprintf (msg, " [no_pixels]"); fp_msg (msg);
+		} else if (naxis == 1) {
+		    sprintf (msg, " [%ld]", naxes[1]); fp_msg (msg);
+		} else {
+		    sprintf (msg, " [%ld", naxes[0]); fp_msg (msg);
+		    for (ii=1; ii < naxis; ii++) {
+			sprintf (msg, "x%ld", naxes[ii]); fp_msg (msg);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 		    }
 		    fp_msg ("]");
 		}
@@ -343,6 +397,7 @@ int fp_info_hdu (fitsfile *infptr)
                     fp_msg (" not_tiled\n");
 
             } else if (hdutype == ASCII_TBL) {
+<<<<<<< HEAD
                 snprintf (msg, SZ_STR,"  %d ASCII_TBL", hdupos); fp_msg (msg);
                 snprintf (msg, SZ_STR," SUMS=%lu/%lu\n", (unsigned long) (~((int) hdusum)), datasum); fp_msg (msg);
 
@@ -354,6 +409,19 @@ int fp_info_hdu (fitsfile *infptr)
                 snprintf (msg, SZ_STR,"  %d OTHER", hdupos); fp_msg (msg);
                 snprintf (msg, SZ_STR," SUMS=%lu/%lu",   (unsigned long) (~((int) hdusum)), datasum); fp_msg (msg);
                 snprintf (msg, SZ_STR," %s\n", val); fp_msg (msg);
+=======
+                sprintf (msg, "  %d ASCII_TBL", hdupos); fp_msg (msg);
+                sprintf (msg, " SUMS=%lu/%lu\n", (unsigned long) (~((int) hdusum)), datasum); fp_msg (msg);
+
+            } else if (hdutype == BINARY_TBL) {
+                sprintf (msg, "  %d BINARY_TBL", hdupos); fp_msg (msg);
+                sprintf (msg, " SUMS=%lu/%lu\n", (unsigned long) (~((int) hdusum)), datasum); fp_msg (msg);
+
+            } else {
+                sprintf (msg, "  %d OTHER", hdupos); fp_msg (msg);
+                sprintf (msg, " SUMS=%lu/%lu",   (unsigned long) (~((int) hdusum)), datasum); fp_msg (msg);
+                sprintf (msg, " %s\n", val); fp_msg (msg);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
             }
 
 	    fits_movrel_hdu (infptr, 1, NULL, &stat);
@@ -455,7 +523,11 @@ int fp_preflight (int argc, char *argv[], int unpack, fpstate *fpptr)
 	      if (infits[0] == '-') {
 	        strcpy(outfits, "output.fits");
 	      } else {
+<<<<<<< HEAD
 	        strcat(outfits, infits);
+=======
+	        strcpy(outfits, infits);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 	      }
 
 	      /* remove .gz or .bz2 suffix, if present (output is not gzipped) */
@@ -471,7 +543,11 @@ int fp_preflight (int argc, char *argv[], int unpack, fpstate *fpptr)
 	      /* and remove it if present */
 	      if (infits[0] != '-') {  /* if not reading from stdin stream */
                  namelen = strlen(outfits);
+<<<<<<< HEAD
 	         if (namelen>=3 && !strcmp(".fz", outfits + namelen - 3) ) { /* suffix is present */
+=======
+	         if ( !strcmp(".fz", outfits + namelen - 3) ) { /* suffix is present */
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
                         outfits[namelen - 3] = '\0';
 	         } else if (fpptr->delete_suffix) {  /* required suffix is missing */
 		    fp_msg ("Error: input compressed file "); fp_msg (infits);
@@ -509,11 +585,14 @@ int fp_preflight (int argc, char *argv[], int unpack, fpstate *fpptr)
 	      /* check that input file  exists */
 	      if (infits[0] != '-') {  /* if not reading from stdin stream */
 	        if (fp_access (infits) != 0) {  /* if not, then check if */
+<<<<<<< HEAD
                     if (strlen(infits)+3 > SZ_STR-1)
                     {
 		        fp_msg ("Error: input file name too long:\n "); fp_msg (infits);
 		        fp_msg ("\n "); fp_noop (); exit (-1);
                     }
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 		    strcat(infits, ".gz");     /* a gzipped version exsits */
 	            if (fp_access (infits) != 0) {
                         namelen = strlen(infits);
@@ -573,12 +652,18 @@ int fp_preflight (int argc, char *argv[], int unpack, fpstate *fpptr)
 	      
 	      /* remove .imh suffix (IRAF format image), and replace with .fits */
               namelen = strlen(outfits);
+<<<<<<< HEAD
 	      if (namelen >=4 && !strcmp(".imh", outfits + namelen - 4) ) {
                         outfits[namelen - 4] = '\0';
                         if (strlen(outfits) == SZ_STR-5)
                            strcat(outfits, ".fit");
                         else
                            strcat(outfits, ".fits");
+=======
+	      if ( !strcmp(".imh", outfits + namelen - 4) ) {
+                        outfits[namelen - 4] = '\0';
+                        strcat(outfits, ".fits");
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 	      }
 
 	      /* If not clobbering the input file, add .fz suffix to output name */
@@ -614,8 +699,12 @@ int fp_loop (int argc, char *argv[], int unpack, fpstate fpvar)
 {
 	char	infits[SZ_STR], outfits[SZ_STR];
 	char	temp[SZ_STR], answer[30];
+<<<<<<< HEAD
         char    valchar[]="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.#()+,-_@[]/^{}";
 	int	ichar=0, outlen=0, iarg, islossless, namelen, iraf_infile = 0, status = 0, ifail;
+=======
+	int	iarg, islossless, namelen, iraf_infile = 0, status = 0, ifail;
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
         
 	if (fpvar.initialized != FP_INIT_MAGIC) {
 	    fp_msg ("Error: internal initialization error\n"); exit (-1);
@@ -669,7 +758,10 @@ int fp_loop (int argc, char *argv[], int unpack, fpstate fpvar)
 	      if (infits[0] != '-') {  /* if not reading from stdin stream */
 	         if (fp_access (infits) != 0) {  /* if not, then */
 		    strcat(infits, ".fz");       /* a .fz version must exsit */
+<<<<<<< HEAD
                     /* fp_preflight already checked for enough size to add '.fz' */
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 	         }
 	      }
 
@@ -690,7 +782,11 @@ int fp_loop (int argc, char *argv[], int unpack, fpstate fpvar)
 	          if (infits[0] == '-') {
 	            strcpy(outfits, "output.fits");
 	          } else {
+<<<<<<< HEAD
 	            strcat(outfits, infits);
+=======
+	            strcpy(outfits, infits);
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 	          }
 
 	          /* remove .gz suffix, if present (output is not gzipped) */
@@ -717,6 +813,7 @@ int fp_loop (int argc, char *argv[], int unpack, fpstate fpvar)
 		strcpy(outfits, "-");
 	      } else if (! fpvar.test_all) {
 
+<<<<<<< HEAD
                   if (fpvar.outfile[0]) { /* user specified output file name */
                      strcpy(outfits, fpvar.outfile);
                   }
@@ -753,6 +850,33 @@ int fp_loop (int argc, char *argv[], int unpack, fpstate fpvar)
 	             if (! fpvar.clobber)
 		           strcat(outfits, ".fz");
 	          }
+=======
+	          /* construct output file name */
+	          if (infits[0] == '-') {
+	            strcpy(outfits, "input.fits");
+	          } else {
+	            strcpy(outfits, infits);
+	          }
+	      
+	          /* remove .gz suffix, if present (output is not gzipped) */
+                  namelen = strlen(outfits);
+	          if ( !strcmp(".gz", outfits + namelen - 3) ) {
+                        outfits[namelen - 3] = '\0';
+	          }
+	      
+	          /* remove .imh suffix (IRAF format image), and replace with .fits */
+                  namelen = strlen(outfits);
+	          if ( !strcmp(".imh", outfits + namelen - 4) ) {
+                        outfits[namelen - 4] = '\0';
+                        strcat(outfits, ".fits");
+                        iraf_infile = 1;  /* this is an IRAF format input file */
+			           /* change the output name to "NAME.fits.fz" */
+	          }
+
+	          /* If not clobbering the input file, add .fz suffix to output name */
+	          if (! fpvar.clobber)
+		        strcat(outfits, ".fz");
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 	      }
 	  }
 
@@ -1288,6 +1412,7 @@ int fp_test (char *infits, char *outfits, char *outfits2, fpstate fpvar)
 		printf("  Ext BITPIX Dimens.   Nulls    Min    Max     Mean    Sigma  Noise2  Noise3  Noise5  Nbits   MaxR\n");
 
 		printf("  %3d  %s", extnum, dtype);
+<<<<<<< HEAD
 		snprintf(dimen,100," (%ld", naxes[0]);
 		len =strlen(dimen);
 		for (ii = 1; ii < naxis; ii++) {
@@ -1297,6 +1422,15 @@ int fp_test (char *infits, char *outfits, char *outfits2, fpstate fpvar)
 		}
                 if (strlen(dimen)<99)
 		   strcat(dimen, ")");
+=======
+		sprintf(dimen," (%ld", naxes[0]);
+		len =strlen(dimen);
+		for (ii = 1; ii < naxis; ii++) {
+		    sprintf(dimen+len,",%ld", naxes[ii]);
+		    len =strlen(dimen);
+		}
+		strcat(dimen, ")");
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 		printf("%-12s",dimen);
 
 		fits_get_hduaddr(inputfptr, &headstart, &datastart, &dataend, &stat);

@@ -1,5 +1,6 @@
                    Log of Changes Made to CFITSIO
 
+<<<<<<< HEAD
 Version 4.1.0 - Feb 2022
                    
   - Calls to the zlib inflate() function in zcompress.c now handle
@@ -279,6 +280,8 @@ Version 3.42 - March 2017 (Ftools release only)
      to a FTP url.  This is needed to support the new configuration on
      the heasarc HTTP server which sometimes redirects http URLS to a ftp URL.
 
+=======
+>>>>>>> 1087ff3af1d00ab4a1ed241a7ccd73ecfb5839a0
 Version 3.41 - November 2016
 
    - The change made in version 3.40 to include strings.h caused problems on
