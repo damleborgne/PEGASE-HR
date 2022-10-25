@@ -17,7 +17,7 @@ define([AC_CACHE_SAVE], )dnl
 # program autoconf. 
 #=============================================================================#
 
-AC_INIT([PEGASE.HR], - , [leborgne@iap.fr]) 
+AC_INIT([PEGASE.HR],[- ],[leborgne@iap.fr]) 
 
 version=`cat VERSION`
 AC_DEFINE_UNQUOTED(PL_VERSION, "$version")
@@ -25,7 +25,7 @@ AC_MSG_RESULT([starting configuration for PEGASE.HR package])
 AC_SUBST(version)
 
 # make sure we are using a recent autoconf version
-AC_PREREQ(2.50)       
+AC_PREREQ([2.71])       
 AC_COPYRIGHT([Copyright 2004 PEGASEHR development team])
 
 AC_CONFIG_SRCDIR([src/SSPs_HR.f])                     # do we have the sources ?
@@ -145,7 +145,8 @@ AC_SUBST(CONFIGOPTIONS)
 
 #### Output ###########################################################
 
-AC_OUTPUT(Makefile peg_cshrc peg_bashrc)
+AC_CONFIG_FILES([Makefile peg_cshrc peg_bashrc])
+AC_OUTPUT
 rm -f config.status && AC_MSG_RESULT(configure: removing ./config.status)
 rm -f config.log && AC_MSG_RESULT(configure: removing ./config.log)
 

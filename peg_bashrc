@@ -7,5 +7,5 @@
 # Alternatively, you can execute this file as: . peg_bashrc
 #-----------------------------------------------------------------------------
 PATH="${PATH}:/Users/leborgne/central/astro/models/pegase/PEGASE-HR/bin"
-export $PATH
+#export $PATH
 #-----------------------------------------------------------------------------

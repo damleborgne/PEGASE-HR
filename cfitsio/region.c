@@ -2,8 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <ctype.h>
 #include "fitsio2.h"
 #include "region.h"
+static int Pt_in_Poly( double x, double y, int nPts, double *Pts );
 
 /*---------------------------------------------------------------------------*/
 int fits_read_rgnfile( const char *filename,
@@ -49,7 +51,7 @@ int fits_read_ascii_region( const char *filename,
    char     *namePtr, *paramPtr, *currLoc;
    char     *pX, *pY, *endp;
    long     allocLen, lineLen, hh, mm, dd;
-   double   *coords, X, Y, R, x, y, ss, div, xsave= 0., ysave= 0.;
+   double   *coords, X, Y, x, y, ss, div, xsave= 0., ysave= 0.;
    int      nParams, nCoords, negdec;
    int      i, done;
    FILE     *rgnFile;
@@ -86,7 +88,7 @@ int fits_read_ascii_region( const char *filename,
    /*  Open Region File  */
 
    if( (rgnFile = fopen( filename, "r" ))==NULL ) {
-      sprintf(currLine,"Could not open Region file %s.",filename);
+      snprintf(currLine,allocLen,"Could not open Region file %s.",filename);
       ffpmsg( currLine );
       free( currLine );
       free( aRgn );
@@ -94,8 +96,13 @@ int fits_read_ascii_region( const char *filename,
    }
    
    /*  Read in file, line by line  */
+   /*  First, set error status in case file is empty */ 
+   *status = FILE_NOT_OPENED;
 
    while( fgets(currLine,allocLen,rgnFile) != NULL ) {
+
+      /* reset status if we got here */
+      *status = 0;
 
       /*  Make sure we have a full line of text  */
 
@@ -121,22 +128,22 @@ int fits_read_ascii_region( const char *filename,
          /*  if not skip line                                        */
 
          currLoc++;
-         while( *currLoc==' ' ) currLoc++;
-         if( !strncasecmp( currLoc, "format:", 7 ) ) {
+         while( isspace(*currLoc) ) currLoc++;
+         if( !fits_strncasecmp( currLoc, "format:", 7 ) ) {
             if( aRgn->nShapes ) {
                ffpmsg("Format code encountered after reading 1 or more shapes.");
                *status = PARSE_SYNTAX_ERR;
                goto error;
             }
             currLoc += 7;
-            while( *currLoc==' ' ) currLoc++;
-            if( !strncasecmp( currLoc, "pixel", 5 ) ) {
+            while( isspace(*currLoc) ) currLoc++;
+            if( !fits_strncasecmp( currLoc, "pixel", 5 ) ) {
                cFmt = pixel_fmt;
-            } else if( !strncasecmp( currLoc, "degree", 6 ) ) {
+            } else if( !fits_strncasecmp( currLoc, "degree", 6 ) ) {
                cFmt = degree_fmt;
-            } else if( !strncasecmp( currLoc, "hhmmss", 6 ) ) {
+            } else if( !fits_strncasecmp( currLoc, "hhmmss", 6 ) ) {
                cFmt = hhmmss_fmt;
-            } else if( !strncasecmp( currLoc, "hms", 3 ) ) {
+            } else if( !fits_strncasecmp( currLoc, "hms", 3 ) ) {
                cFmt = hhmmss_fmt;
             } else {
                ffpmsg("Unknown format code encountered in region file.");
@@ -145,7 +152,7 @@ int fits_read_ascii_region( const char *filename,
             }
          }
 
-      } else if( !strncasecmp( currLoc, "glob", 4 ) ) {
+      } else if( !fits_strncasecmp( currLoc, "glob", 4 ) ) {
 		  /* skip lines that begin with the word 'global' */
 
       } else {
@@ -185,11 +192,11 @@ int fits_read_ascii_region( const char *filename,
                   break;
                case ':':  
                   currLoc++;
-                  cFmt = hhmmss_fmt;
+                  if ( paramPtr ) cFmt = hhmmss_fmt; /* set format if parameter has : */
                   break;
                case 'd':
                   currLoc++;
-                  cFmt = degree_fmt;
+                  if ( paramPtr ) cFmt = degree_fmt; /* set format if parameter has d */  
                   break;
                case ',':
                   nParams++;  /* Fall through to default */
@@ -206,31 +213,30 @@ int fits_read_ascii_region( const char *filename,
 
             /*  Skip white space in region name  */
 
-            while( *namePtr==' ' ) namePtr++;
+            while( isspace(*namePtr) ) namePtr++;
 
             /*  Was this a blank line? Or the end of the current one  */
 
             if( ! *namePtr && ! paramPtr ) continue;
 
-
             /*  Check for format code at beginning of the line */
 
-            if( !strncasecmp( namePtr, "image;", 6 ) ) {
+            if( !fits_strncasecmp( namePtr, "image;", 6 ) ) {
 				namePtr += 6;
 				cFmt = pixel_fmt;
-            } else if( !strncasecmp( namePtr, "physical;", 9 ) ) {
+            } else if( !fits_strncasecmp( namePtr, "physical;", 9 ) ) {
                                 namePtr += 9;
                                 cFmt = pixel_fmt;
-            } else if( !strncasecmp( namePtr, "linear;", 7 ) ) {
+            } else if( !fits_strncasecmp( namePtr, "linear;", 7 ) ) {
                                 namePtr += 7;
                                 cFmt = pixel_fmt;
-            } else if( !strncasecmp( namePtr, "fk4;", 4 ) ) {
+            } else if( !fits_strncasecmp( namePtr, "fk4;", 4 ) ) {
 				namePtr += 4;
 				cFmt = degree_fmt;
-            } else if( !strncasecmp( namePtr, "fk5;", 4 ) ) {
+            } else if( !fits_strncasecmp( namePtr, "fk5;", 4 ) ) {
 				namePtr += 4;
 				cFmt = degree_fmt;
-            } else if( !strncasecmp( namePtr, "icrs;", 5 ) ) {
+            } else if( !fits_strncasecmp( namePtr, "icrs;", 5 ) ) {
 				namePtr += 5;
 				cFmt = degree_fmt;
 
@@ -241,29 +247,29 @@ int fits_read_ascii_region( const char *filename,
                the 'continue' statement to jump to the end of the loop and
                then continue reading the next line of the region file. */
 
-            } else if( !strncasecmp( namePtr, "fk5", 3 ) ) {
+            } else if( !fits_strncasecmp( namePtr, "fk5", 3 ) ) {
 				cFmt = degree_fmt;
                                 continue;  /* supports POW region file format */
-            } else if( !strncasecmp( namePtr, "fk4", 3 ) ) {
+            } else if( !fits_strncasecmp( namePtr, "fk4", 3 ) ) {
 				cFmt = degree_fmt;
                                 continue;  /* supports POW region file format */
-            } else if( !strncasecmp( namePtr, "icrs", 4 ) ) {
+            } else if( !fits_strncasecmp( namePtr, "icrs", 4 ) ) {
 				cFmt = degree_fmt;
                                 continue;  /* supports POW region file format */
-            } else if( !strncasecmp( namePtr, "image", 5 ) ) {
+            } else if( !fits_strncasecmp( namePtr, "image", 5 ) ) {
 				cFmt = pixel_fmt;
                                 continue;  /* supports POW region file format */
-            } else if( !strncasecmp( namePtr, "physical", 8 ) ) {
+            } else if( !fits_strncasecmp( namePtr, "physical", 8 ) ) {
 				cFmt = pixel_fmt;
                                 continue;  /* supports POW region file format */
 
 
-            } else if( !strncasecmp( namePtr, "galactic;", 9 ) ) {
+            } else if( !fits_strncasecmp( namePtr, "galactic;", 9 ) ) {
                ffpmsg( "Galactic region coordinates not supported" );
                ffpmsg( namePtr );
                *status = PARSE_SYNTAX_ERR;
                goto error;
-            } else if( !strncasecmp( namePtr, "ecliptic;", 9 ) ) {
+            } else if( !fits_strncasecmp( namePtr, "ecliptic;", 9 ) ) {
                ffpmsg( "ecliptic region coordinates not supported" );
                ffpmsg( namePtr );
                *status = PARSE_SYNTAX_ERR;
@@ -299,7 +305,7 @@ int fits_read_ascii_region( const char *filename,
 	    newShape->param.gen.sinT = 0.0;
 	    newShape->param.gen.cosT = 0.0;
 
-            while( *namePtr==' ' ) namePtr++;
+            while( isspace(*namePtr) ) namePtr++;
             
 			/*  Check for the shape's sign  */
 
@@ -312,28 +318,28 @@ int fits_read_ascii_region( const char *filename,
 
             /* Skip white space in region name */
 
-            while( *namePtr==' ' ) namePtr++;
+            while( isspace(*namePtr) ) namePtr++;
             if( *namePtr=='\0' ) {
                ffpmsg( "Error reading Region file" );
                *status = PARSE_SYNTAX_ERR;
                goto error;
             }
             lineLen = strlen( namePtr ) - 1;
-            while( namePtr[lineLen]==' ' ) namePtr[lineLen--] = '\0';
+            while( isspace(namePtr[lineLen]) ) namePtr[lineLen--] = '\0';
 
             /*  Now identify the region  */
 
-            if(        !strcasecmp( namePtr, "circle"  ) ) {
+            if(        !fits_strcasecmp( namePtr, "circle"  ) ) {
                newShape->shape = circle_rgn;
                if( nParams != 3 )
                   *status = PARSE_SYNTAX_ERR;
                nCoords = 2;
-            } else if( !strcasecmp( namePtr, "annulus" ) ) {
+            } else if( !fits_strcasecmp( namePtr, "annulus" ) ) {
                newShape->shape = annulus_rgn;
                if( nParams != 4 )
                   *status = PARSE_SYNTAX_ERR;
                nCoords = 2;
-            } else if( !strcasecmp( namePtr, "ellipse" ) ) {
+            } else if( !fits_strcasecmp( namePtr, "ellipse" ) ) {
                if( nParams < 4 || nParams > 8 ) {
                   *status = PARSE_SYNTAX_ERR;
 	       } else if ( nParams < 6 ) {
@@ -345,15 +351,15 @@ int fits_read_ascii_region( const char *filename,
 		 newShape->param.gen.p[7] = 0.0;
 	       }
                nCoords = 2;
-            } else if( !strcasecmp( namePtr, "elliptannulus" ) ) {
+            } else if( !fits_strcasecmp( namePtr, "elliptannulus" ) ) {
                newShape->shape = elliptannulus_rgn;
                if( !( nParams==8 || nParams==6 ) )
                   *status = PARSE_SYNTAX_ERR;
                newShape->param.gen.p[6] = 0.0;
                newShape->param.gen.p[7] = 0.0;
                nCoords = 2;
-            } else if( !strcasecmp( namePtr, "box"    ) 
-                    || !strcasecmp( namePtr, "rotbox" ) ) {
+            } else if( !fits_strcasecmp( namePtr, "box"    ) 
+                    || !fits_strcasecmp( namePtr, "rotbox" ) ) {
 	       if( nParams < 4 || nParams > 8 ) {
 		 *status = PARSE_SYNTAX_ERR;
 	       } else if ( nParams < 6 ) {
@@ -365,43 +371,60 @@ int fits_read_ascii_region( const char *filename,
 		  newShape->param.gen.p[7] = 0.0;
 	       }
 	       nCoords = 2;
-            } else if( !strcasecmp( namePtr, "rectangle"    )
-                    || !strcasecmp( namePtr, "rotrectangle" ) ) {
+            } else if( !fits_strcasecmp( namePtr, "rectangle"    )
+                    || !fits_strcasecmp( namePtr, "rotrectangle" ) ) {
                newShape->shape = rectangle_rgn;
                if( nParams < 4 || nParams > 5 )
                   *status = PARSE_SYNTAX_ERR;
                newShape->param.gen.p[4] = 0.0;
                nCoords = 4;
-            } else if( !strcasecmp( namePtr, "diamond"    )
-                    || !strcasecmp( namePtr, "rotdiamond" )
-                    || !strcasecmp( namePtr, "rhombus"    )
-                    || !strcasecmp( namePtr, "rotrhombus" ) ) {
+            } else if( !fits_strcasecmp( namePtr, "diamond"    )
+                    || !fits_strcasecmp( namePtr, "rotdiamond" )
+                    || !fits_strcasecmp( namePtr, "rhombus"    )
+                    || !fits_strcasecmp( namePtr, "rotrhombus" ) ) {
                newShape->shape = diamond_rgn;
                if( nParams < 4 || nParams > 5 )
                   *status = PARSE_SYNTAX_ERR;
                newShape->param.gen.p[4] = 0.0;
                nCoords = 2;
-            } else if( !strcasecmp( namePtr, "sector"  )
-                    || !strcasecmp( namePtr, "pie"     ) ) {
+            } else if( !fits_strcasecmp( namePtr, "sector"  )
+                    || !fits_strcasecmp( namePtr, "pie"     ) ) {
                newShape->shape = sector_rgn;
                if( nParams != 4 )
                   *status = PARSE_SYNTAX_ERR;
                nCoords = 2;
-            } else if( !strcasecmp( namePtr, "point"   ) ) {
+            } else if( !fits_strcasecmp( namePtr, "point"   ) ) {
                newShape->shape = point_rgn;
                if( nParams != 2 )
                   *status = PARSE_SYNTAX_ERR;
                nCoords = 2;
-            } else if( !strcasecmp( namePtr, "line"    ) ) {
+            } else if( !fits_strcasecmp( namePtr, "line"    ) ) {
                newShape->shape = line_rgn;
                if( nParams != 4 )
                   *status = PARSE_SYNTAX_ERR;
                nCoords = 4;
-            } else if( !strcasecmp( namePtr, "polygon" ) ) {
+            } else if( !fits_strcasecmp( namePtr, "polygon" ) ) {
                newShape->shape = poly_rgn;
                if( nParams < 6 || (nParams&1) )
                   *status = PARSE_SYNTAX_ERR;
                nCoords = nParams;
+            } else if( !fits_strcasecmp( namePtr, "panda" ) ) {
+               newShape->shape = panda_rgn;
+               if( nParams != 8 )
+                  *status = PARSE_SYNTAX_ERR;
+               nCoords = 2;
+            } else if( !fits_strcasecmp( namePtr, "epanda" ) ) {
+               newShape->shape = epanda_rgn;
+               if( nParams < 10 || nParams > 11 )
+                  *status = PARSE_SYNTAX_ERR;
+               newShape->param.gen.p[10] = 0.0;
+               nCoords = 2;
+            } else if( !fits_strcasecmp( namePtr, "bpanda" ) ) {
+               newShape->shape = bpanda_rgn;
+               if( nParams < 10 || nParams > 11 )
+                  *status = PARSE_SYNTAX_ERR;
+               newShape->param.gen.p[10] = 0.0;
+               nCoords = 2;
             } else {
                ffpmsg( "Unrecognized region found in region file:" );
                ffpmsg( namePtr );
@@ -432,6 +455,7 @@ int fits_read_ascii_region( const char *filename,
 
             /*  Parse the initial "WCS?" coordinates  */
             for( i=0; i<nCoords; i+=2 ) {
+
                pX = paramPtr;
                while( *paramPtr!=',' ) paramPtr++;
                *(paramPtr++) = '\0';
@@ -460,7 +484,7 @@ int fits_read_ascii_region( const char *filename,
                   ss = 0.;
                   negdec = 0;
 
-                  while( *pY==' ' ) pY++;
+                  while( isspace(*pY) ) pY++;
                   if (*pY=='-') {
                       negdec = 1;
                       pY++;
@@ -508,6 +532,7 @@ int fits_read_ascii_region( const char *filename,
                }
                coords[i]   = X;
                coords[i+1] = Y;
+
             }
 
             /*  Read in remaining parameters...  */
@@ -561,6 +586,7 @@ int fits_read_ascii_region( const char *filename,
 	    if( cFmt!=pixel_fmt ) {	    
 	      switch( newShape->shape ) {
 	      case sector_rgn:
+	      case panda_rgn:
 		coords[2] += (wcs->rot);
 		coords[3] += (wcs->rot);
 		break;
@@ -575,6 +601,13 @@ int fits_read_ascii_region( const char *filename,
 		coords[6] += (wcs->rot);
 		coords[7] += (wcs->rot);
 		break;
+	      case epanda_rgn:
+	      case bpanda_rgn:
+		coords[2] += (wcs->rot);
+		coords[3] += (wcs->rot);
+		coords[10] += (wcs->rot);
+              default:
+                break;
 	      }
 	    }
 
@@ -616,7 +649,7 @@ int fits_in_region( double    X,
 /*  Y are in pixel coordinates.                                              */
 /*---------------------------------------------------------------------------*/
 {
-   double x, y, dx, dy, xprime, yprime, r;
+   double x, y, dx, dy, xprime, yprime, r, th;
    RgnShape *Shapes;
    int i, cur_comp;
    int result, comp_result;
@@ -749,7 +782,7 @@ int fits_in_region( double    X,
          y = Y - Shapes->param.gen.p[1];
 
          if( x || y ) {
-            r = atan2( y, x ) * 180.0 / myPI;
+            r = atan2( y, x ) * RadToDeg;
             if( Shapes->param.gen.p[2] <= Shapes->param.gen.p[3] ) {
                if( r < Shapes->param.gen.p[2] || r > Shapes->param.gen.p[3] )
                   comp_result = 0;
@@ -834,6 +867,104 @@ int fits_in_region( double    X,
             comp_result = Pt_in_Poly( X, Y, Shapes->param.poly.nPts,
                                        Shapes->param.poly.Pts );
          break;
+
+      case panda_rgn:
+         /*  Shift origin to center of region  */
+         x = X - Shapes->param.gen.p[0];
+         y = Y - Shapes->param.gen.p[1];
+
+         r = x*x + y*y;
+         if ( r < Shapes->param.gen.a || r > Shapes->param.gen.b ) {
+	   comp_result = 0;
+	 } else {
+	   if( x || y ) {
+	     th = atan2( y, x ) * RadToDeg;
+	     if( Shapes->param.gen.p[2] <= Shapes->param.gen.p[3] ) {
+               if( th < Shapes->param.gen.p[2] || th > Shapes->param.gen.p[3] )
+		 comp_result = 0;
+	     } else {
+               if( th < Shapes->param.gen.p[2] && th > Shapes->param.gen.p[3] )
+		 comp_result = 0;
+	     }
+	   }
+         }
+         break;
+
+      case epanda_rgn:
+         /*  Shift origin to center of region  */
+         xprime = X - Shapes->param.gen.p[0];
+         yprime = Y - Shapes->param.gen.p[1];
+
+         /*  Rotate point to region's orientation  */
+         x =  xprime * Shapes->param.gen.cosT + yprime * Shapes->param.gen.sinT;
+         y = -xprime * Shapes->param.gen.sinT + yprime * Shapes->param.gen.cosT;
+	 xprime = x;
+	 yprime = y;
+
+	 /* outer region test */
+         x = xprime/Shapes->param.gen.p[7];
+         y = yprime/Shapes->param.gen.p[8];
+         r = x*x + y*y;
+	 if ( r>1.0 )
+	   comp_result = 0;
+	 else {
+	   /* inner region test */
+	   x = xprime/Shapes->param.gen.p[5];
+	   y = yprime/Shapes->param.gen.p[6];
+	   r = x*x + y*y;
+	   if ( r<1.0 )
+	     comp_result = 0;
+	   else {
+	     /* angle test */
+	     if( xprime || yprime ) {
+	       th = atan2( yprime, xprime ) * RadToDeg;
+	       if( Shapes->param.gen.p[2] <= Shapes->param.gen.p[3] ) {
+		 if( th < Shapes->param.gen.p[2] || th > Shapes->param.gen.p[3] )
+		   comp_result = 0;
+	       } else {
+		 if( th < Shapes->param.gen.p[2] && th > Shapes->param.gen.p[3] )
+		   comp_result = 0;
+	       }
+	     }
+	   }
+	 }
+         break;
+
+      case bpanda_rgn:
+         /*  Shift origin to center of region  */
+         xprime = X - Shapes->param.gen.p[0];
+         yprime = Y - Shapes->param.gen.p[1];
+
+         /*  Rotate point to region's orientation  */
+         x =  xprime * Shapes->param.gen.cosT + yprime * Shapes->param.gen.sinT;
+         y = -xprime * Shapes->param.gen.sinT + yprime * Shapes->param.gen.cosT;
+
+	 /* outer box test */
+         dx = 0.5 * Shapes->param.gen.p[7];
+         dy = 0.5 * Shapes->param.gen.p[8];
+         if( (x < -dx) || (x > dx) || (y < -dy) || (y > dy) )
+	   comp_result = 0;
+	 else {
+	   /* inner box test */
+	   dx = 0.5 * Shapes->param.gen.p[5];
+	   dy = 0.5 * Shapes->param.gen.p[6];
+	   if( (x >= -dx) && (x <= dx) && (y >= -dy) && (y <= dy) )
+	     comp_result = 0;
+	   else {
+	     /* angle test */
+	     if( x || y ) {
+	       th = atan2( y, x ) * RadToDeg;
+	       if( Shapes->param.gen.p[2] <= Shapes->param.gen.p[3] ) {
+		 if( th < Shapes->param.gen.p[2] || th > Shapes->param.gen.p[3] )
+		   comp_result = 0;
+	       } else {
+		 if( th < Shapes->param.gen.p[2] && th > Shapes->param.gen.p[3] )
+		   comp_result = 0;
+	       }
+	     }
+	   }
+	 }
+         break;
       }
 
       if( !Shapes->sign ) comp_result = !comp_result;
@@ -849,17 +980,58 @@ int fits_in_region( double    X,
 
 /*---------------------------------------------------------------------------*/
 void fits_free_region( SAORegion *Rgn )
-/*   Free up memory allocated to hold the region data.                       */
+/*   Free up memory allocated to hold the region data.                       
+   This is more complicated for the case of polygons, which may be sharing
+   points arrays due to shallow copying (in fits_set_region_components) of
+   'exluded' regions.  We must ensure that these arrays are only freed once.       
+
 /*---------------------------------------------------------------------------*/
 {
-   int i;
+   int i,j;
+   
+   int nFreedPoly=0;
+   int nPolyArraySize=10;
+   double **freedPolyPtrs=0;
+   double *ptsToFree=0;
+   int isAlreadyFreed=0;
+   
+   freedPolyPtrs = (double**)malloc(nPolyArraySize*sizeof(double*));
 
    for( i=0; i<Rgn->nShapes; i++ )
       if( Rgn->Shapes[i].shape == poly_rgn )
-         free( Rgn->Shapes[i].param.poly.Pts );
+      {
+         /* No shared arrays for 'include' polygons */
+         if (Rgn->Shapes[i].sign)
+            free(Rgn->Shapes[i].param.poly.Pts);
+         else
+         {
+            ptsToFree = Rgn->Shapes[i].param.poly.Pts;
+            isAlreadyFreed = 0;
+            for (j=0; j<nFreedPoly && !isAlreadyFreed; j++)
+            {
+               if (freedPolyPtrs[j] == ptsToFree)
+                  isAlreadyFreed = 1;
+            }
+            if (!isAlreadyFreed)
+            {
+               free(ptsToFree);
+               /* Now add pointer to array of freed points */
+               if (nFreedPoly == nPolyArraySize)
+               {
+                  nPolyArraySize *= 2;
+                  freedPolyPtrs = (double **)realloc(freedPolyPtrs, 
+                          nPolyArraySize*sizeof(double*));
+               }
+               freedPolyPtrs[nFreedPoly] = ptsToFree;
+               ++nFreedPoly;
+            }
+         }
+      }
    if( Rgn->Shapes )
       free( Rgn->Shapes );
    free( Rgn );
+   
+   free(freedPolyPtrs);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -974,6 +1146,10 @@ void fits_set_region_components ( SAORegion *aRgn )
 
 	/* if this is an include region then insert a copy of the exclude
 	   region immediately after it */
+           
+        /* Note that this makes shallow copies of a polygon's dynamically
+        allocated Pts array -- the memory is shared.  This must be checked
+        when freeing in fits_free_region. */
 
 	if ( aRgn->Shapes[j].sign ) {
 
@@ -1086,6 +1262,25 @@ void fits_setup_shape ( RgnShape *newShape)
     newShape->param.gen.cosT = ( R ? X/R : 1.0 );
     newShape->param.gen.a    = R + 0.5;
     break;
+  case panda_rgn:
+    while( coords[2]> 180.0 ) coords[2] -= 360.0;
+    while( coords[2]<=-180.0 ) coords[2] += 360.0;
+    while( coords[3]> 180.0 ) coords[3] -= 360.0;
+    while( coords[3]<=-180.0 ) coords[3] += 360.0;
+    newShape->param.gen.a = newShape->param.gen.p[5]*newShape->param.gen.p[5];
+    newShape->param.gen.b = newShape->param.gen.p[6]*newShape->param.gen.p[6];
+    break;
+  case epanda_rgn:
+  case bpanda_rgn:
+    while( coords[2]> 180.0 ) coords[2] -= 360.0;
+    while( coords[2]<=-180.0 ) coords[2] += 360.0;
+    while( coords[3]> 180.0 ) coords[3] -= 360.0;
+    while( coords[3]<=-180.0 ) coords[3] += 360.0;
+    newShape->param.gen.sinT = sin( myPI * (coords[10] / 180.0) );
+    newShape->param.gen.cosT = cos( myPI * (coords[10] / 180.0) );
+    break;
+  default:
+    break;
   }
 
   /*  Set the xmin, xmax, ymin, ymax elements of the RgnShape structure */
@@ -1144,6 +1339,25 @@ void fits_setup_shape ( RgnShape *newShape)
     R = 1.0;
     break;
 
+  case panda_rgn:
+    R = coords[6];
+    break;
+
+  case epanda_rgn:
+    if ( coords[7] > coords[8] ) {
+      R = coords[7];
+    } else {
+      R = coords[8];
+    }
+    break;
+
+  case bpanda_rgn:
+    R = sqrt(coords[7]*coords[8]+
+	     coords[7]*coords[8])/2.0;
+    break;
+
+  default:
+    break;
   }
 
   if ( R > 0.0 ) {
@@ -1216,6 +1430,8 @@ void fits_setup_shape ( RgnShape *newShape)
     newShape->ymax = -1.0;
     break;
 
+  default:
+    break;
   }
 
   return;
@@ -1237,7 +1453,7 @@ int fits_read_fits_region ( fitsfile *fptr,
   int i, j, icol[6], idum, anynul, npos;
   int dotransform, got_component = 1, tstatus;
   long icsize[6];
-  double X, Y, R, Theta, Xsave, Ysave, Xpos, Ypos;
+  double X, Y, Theta, Xsave = 0, Ysave = 0, Xpos, Ypos;
   double *coords;
   char *cvalue, *cvalue2;
   char comment[FLEN_COMMENT];
@@ -1254,7 +1470,7 @@ int fits_read_fits_region ( fitsfile *fptr,
 		       diamond_rgn};
   SAORegion *aRgn;
   RgnShape *newShape;
-  WCSdata *regwcs;
+  WCSdata *regwcs = 0;
 
   if ( *status ) return( *status );
 
@@ -1387,7 +1603,7 @@ int fits_read_fits_region ( fitsfile *fptr,
 
     /* set the shape type */
 
-    for (j=0; j<9; j++) {
+    for (j=0; j<17; j++) {
       if ( !strcmp(cvalue2, shapename[j]) ) newShape->shape = shapetype[j];
     }
 
@@ -1490,6 +1706,8 @@ int fits_read_fits_region ( fitsfile *fptr,
     case elliptannulus_rgn:
       npos = 4;
       break;
+    default:
+      break;
     }
 
     if ( npos > 0 ) {
@@ -1537,6 +1755,8 @@ int fits_read_fits_region ( fitsfile *fptr,
     case sector_rgn:
       npos = 2;
       break;
+    default:
+     break;
     }
 
     if ( npos > 0 ) {

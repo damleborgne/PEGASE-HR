@@ -112,11 +112,13 @@ int fits_hcompress(int *a, int ny, int nx, int scale, char *output,
 
   /* encode and write to output array */
 
+  FFLOCK;
   noutmax = *nbytes;  /* input value is the allocated size of the array */
   *nbytes = 0;  /* reset */
 
   stat = encode(output, nbytes, a, nx, ny, scale);
-
+  FFUNLOCK;
+  
   *status = stat;
   return(*status);
 }
@@ -156,10 +158,13 @@ int fits_hcompress64(LONGLONG *a, int ny, int nx, int scale, char *output,
   digitize64(a, nx, ny, scale);
 
   /* encode and write to output array */
+
+  FFLOCK;
   noutmax = *nbytes;  /* input value is the allocated size of the array */
   *nbytes = 0;  /* reset */
 
   stat = encode64(output, nbytes, a, nx, ny, scale);
+  FFUNLOCK;
 
   *status = stat;
   return(*status);
@@ -624,15 +629,16 @@ int stat;
 	a[0] = 0;
 	/*
 	 * allocate array for sign bits and save values, 8 per byte
+              (initialize to all zeros)
 	 */
-	signbits = (unsigned char *) malloc((nel+7)/8);
+	signbits = (unsigned char *) calloc(1, (nel+7)/8);
 	if (signbits == (unsigned char *) NULL) {
 		ffpmsg("encode: insufficient memory");
 		return(DATA_COMPRESSION_ERR);
 	}
 	nsign = 0;
 	bits_to_go = 8;
-	signbits[0] = 0;
+/*	signbits[0] = 0; */
 	for (i=0; i<nel; i++) {
 		if (a[i] > 0) {
 			/*
@@ -658,7 +664,7 @@ int stat;
 			 */
 			bits_to_go = 8;
 			nsign += 1;
-			signbits[nsign] = 0;
+/*			signbits[nsign] = 0; */
 		}
 	}
 	if (bits_to_go != 8) {
@@ -786,14 +792,14 @@ int stat;
 	/*
 	 * allocate array for sign bits and save values, 8 per byte
 	 */
-	signbits = (unsigned char *) malloc((nel+7)/8);
+	signbits = (unsigned char *) calloc(1, (nel+7)/8);
 	if (signbits == (unsigned char *) NULL) {
 		ffpmsg("encode64: insufficient memory");
 		return(DATA_COMPRESSION_ERR);
 	}
 	nsign = 0;
 	bits_to_go = 8;
-	signbits[0] = 0;
+/*	signbits[0] = 0; */
 	for (i=0; i<nel; i++) {
 		if (a[i] > 0) {
 			/*
@@ -819,7 +825,7 @@ int stat;
 			 */
 			bits_to_go = 8;
 			nsign += 1;
-			signbits[nsign] = 0;
+/*			signbits[nsign] = 0; */
 		}
 	}
 	if (bits_to_go != 8) {

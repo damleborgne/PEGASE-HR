@@ -33,7 +33,7 @@ LIBDIR = ${PEGASE_ROOT}/lib
 SRC = src
 
 F77 = @F77@
-FFLAGS = @FFLAGS@
+FFLAGS = @FFLAGS@ -fallow-argument-mismatch
 LIBRARIES = -L${LIBDIR} -lpegase @LIBS@
 
 ## If you add or remove an application program, edit the two variables:
@@ -73,9 +73,8 @@ ${LIBPEGASE}:  ${SRCSUB} ${SRC}/peg_config.f ${SRC}/peg_include.f
 	 ${F77} ${FFLAGS} -c ${SRCSUB} ${INCL} && ar -csr ${LIBPEGASE} *.o &&\
 	 ${RM} -f *.o 
 
-
 .f:$<
-	${F77} ${FFLAGS} $<  ${LIBRARIES} ${INCL} -o  $@ ||\
+	@ ${F77} ${FFLAGS} $<  ${LIBRARIES} ${INCL} -o  $@ ||\
 	echo "PEGASE: failed to install: ${EXEC}${@F}"
 
 # The file peg_config defines the variable PEG_ROOT

@@ -52,7 +52,21 @@
 		get rid of compiler warnings.  Thanks to ROOT developers
 		Jacek Holeczek and Rene Brun for these suggestions. (KMCCARTY)
       Dec 2008  Added typedef for LONGLONG to support Borland compiler (WDP)
+      Jan 2020  Added __attribute__((unused)) for GCC to prevent warnings (C. Markwardt)
+      Jan 2022  Changed H_CF_SPECIAL definition from 'unsigned' to 'size_t'.
+                This determines the type of the hidden length argument which
+                gets added to functions passing strings from Fortran to C.
+                This change was first required when testing Homebrew
+                compilers native to Mac/ARM Silicon. (C. Gordon)
  *******/
+
+#ifndef __CFORTRAN__PCTYPE__UNUSED__
+#ifdef __GNUC__
+#define __CFORTRAN__PCTYPE__UNUSED__ __attribute__ ((unused))
+#else
+#define __CFORTRAN__PCTYPE__UNUSED__
+#endif
+#endif
 
 /* 
   Avoid symbols already used by compilers and system *.h:
@@ -71,19 +85,29 @@
 
 #if (_MSC_VER < 1300)   /* versions earlier than V7.0 do not have 'long long' */
     typedef __int64 LONGLONG;
+    typedef unsigned __int64 ULONGLONG;
 #else                   /* newer versions do support 'long long' */
     typedef long long LONGLONG; 
+    typedef unsigned long long ULONGLONG; 
 #endif
 
 #elif defined( __BORLANDC__)  /* (WDP) for the free Borland compiler, in particular */
     typedef __int64 LONGLONG;
+    typedef unsigned __int64 ULONGLONG;
 #else
     typedef long long LONGLONG; 
+    typedef unsigned long long ULONGLONG; 
 #endif
 
 #define LONGLONG_TYPE
 #endif  
 
+/* Microsoft Visual C++ requires alternate form for static inline. */
+#if defined(_MSC_VER)   /* Microsoft Visual C++ */
+#define STIN static __inline
+#else
+#define STIN static inline
+#endif
 
 /* First prepare for the C compiler. */
 
@@ -614,9 +638,9 @@ typedef DSC$DESCRIPTOR_A(1) fstringvector;
 #define NUM_ELEM_ARG(B) *_2(A,B),_NUM_ELEM_ARG
 #define TERM_CHARS(A,B) A,B
 #ifndef __CF__KnR
-static int num_elem(char *strv, unsigned elem_len, int term_char, int num_term)
+STIN int num_elem(char *strv, unsigned elem_len, int term_char, int num_term)
 #else
-static int num_elem(      strv,          elem_len,     term_char,     num_term)
+STIN int num_elem(      strv,          elem_len,     term_char,     num_term)
                     char *strv; unsigned elem_len; int term_char; int num_term;
 #endif
 /* elem_len is the number of characters in each element of strv, the FORTRAN
@@ -694,11 +718,11 @@ return (int)num;
 /* This allows Pvariables for ARGS. ARGF machinery is above ARGFP.
  * B is not needed because the variable may be changed by the Fortran routine,
  * but because B is the only way to access an arbitrary macro argument.       */
-#define     PINT_cfVP(A,B) int  B = (int)A;              /* For ZSTRINGV_ARGS */
+#define     PINT_cfVP(A,B) int  B __CFORTRAN__PCTYPE__UNUSED__ = (int)A;              /* For ZSTRINGV_ARGS */
 #else
 #define     PINT_cfVP(A,B)
 #endif
-#define PLOGICAL_cfVP(A,B) int *B;      /* Returning LOGICAL in FUNn and SUBn */
+#define PLOGICAL_cfVP(A,B) int *B __CFORTRAN__PCTYPE__UNUSED__ ;      /* Returning LOGICAL in FUNn and SUBn */
 #define    PLONG_cfVP(A,B) PINT_cfVP(A,B)
 #define   PSHORT_cfVP(A,B) PINT_cfVP(A,B)
 
@@ -1682,7 +1706,12 @@ do{VVCF(T1,A1,B1)  VVCF(T2,A2,B2)  VVCF(T3,A3,B3)  VVCF(T4,A4,B4)  VVCF(T5,A5,B5
 #define   HCF(TN,I)         _(TN,_cfSTR)(3,H,cfCOMMA, H,_(C,I),0,0)
 #define  HHCF(TN,I)         _(TN,_cfSTR)(3,H,cfCOMMA,HH,_(C,I),0,0)
 #define HHHCF(TN,I)         _(TN,_cfSTR)(3,H,cfCOLON, H,_(C,I),0,0)
+/* Use H_CF_SPECIAL = size_t for GNU compilers newer than version 7.x: */
+#if (defined(__GNUC__) && __GNUC__ > 7)
+#define  H_CF_SPECIAL       size_t
+#else
 #define  H_CF_SPECIAL       unsigned
+#endif
 #define HH_CF_SPECIAL
 #define  DEFAULT_cfH(M,I,A)
 #define  LOGICAL_cfH(S,U,B)
@@ -2510,6 +2539,5 @@ string. */
                    CFARGT27S(RCF,T1,T2,T3,T4,T5,T6,T7,T8,T9,TA,TB,TC,TD,TE,TF,TG,TH,TI,TJ,TK,TL,TM,TN,TO,TP,TQ,TR)  _(T0,_cfI)}
 
 #endif
-
 
 #endif	 /* __CFORTRAN_LOADED */

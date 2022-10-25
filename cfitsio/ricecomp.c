@@ -3,6 +3,14 @@
   available for use in CFITSIO in July 1999.  These routines were
   originally contained in 2 source files: rcomp.c and rdecomp.c,
   and the 'include' file now called ricecomp.h was originally called buffer.h.
+  
+  Note that beginning with CFITSIO v3.08, EOB checking was removed to improve
+  speed, and so now the input compressed bytes buffers must have been
+  allocated big enough so that they will never be overflowed. A simple
+  rule of thumb that guarantees the buffer will be large enough is to make
+  it 1% larger than the size of the input array of pixels that are being
+  compressed.
+  
 */
 
 /*----------------------------------------------------------*/
@@ -23,14 +31,40 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * nonzero_count is lookup table giving number of bits in 8-bit values not including
+ * leading zeros used in fits_rdecomp, fits_rdecomp_short and fits_rdecomp_byte
+ */
+static const int nonzero_count[256] = {
+0, 
+1, 
+2, 2, 
+3, 3, 3, 3, 
+4, 4, 4, 4, 4, 4, 4, 4, 
+5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 
+6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 
+6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 
+7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
+7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
+7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
+7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
+8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8};
+
 typedef unsigned char Buffer_t;
 
 typedef struct {
-	int bitbuffer;		/* bit buffer					*/
-	int bits_to_go;		/* bits to go in buffer			*/
-	Buffer_t *start;	/* start of buffer				*/
+	int bitbuffer;		/* bit buffer			*/
+	int bits_to_go;		/* bits to go in buffer		*/
+	Buffer_t *start;	/* start of buffer		*/
 	Buffer_t *current;	/* current position in buffer	*/
-	Buffer_t *end;		/* end of buffer				*/
+	Buffer_t *end;		/* end of buffer		*/
 } Buffer;
 
 #define putcbuf(c,mf) 	((*(mf->current)++ = c), 0)
@@ -40,6 +74,17 @@ typedef struct {
 static void start_outputing_bits(Buffer *buffer);
 static int done_outputing_bits(Buffer *buffer);
 static int output_nbits(Buffer *buffer, int bits, int n);
+
+/*  only used for diagnoistics
+static int case1, case2, case3;
+int fits_get_case(int *c1, int*c2, int*c3) {
+
+  *c1 = case1;
+  *c2 = case2;
+  *c3 = case3;
+  return(0);
+}
+*/
 
 /* this routine used to be called 'rcomp'  (WDP)  */
 /*---------------------------------------------------------------------------*/
@@ -99,6 +144,7 @@ unsigned int *diff;
     /* move out of switch block, to tweak performance */
     fsbits = 5;
     fsmax = 25;
+
     bbits = 1<<fsbits;
 
     /*
@@ -395,6 +441,7 @@ unsigned int *diff;
 	 * fsbits ID bits used to indicate split level
 	 */
 	if (fs >= fsmax) {
+/* case3++; */
 	    /* Special high entropy case when FS >= fsmax
 	     * Just write pixel difference values directly, no Rice coding at all.
 	     */
@@ -411,6 +458,7 @@ unsigned int *diff;
 		}
 	    }
 	} else if (fs == 0 && pixelsum == 0) {
+/* case1++; */
 	    /*
 	     * special low entropy case when FS = 0 and pixelsum=0 (all
 	     * pixels in block are zero.)
@@ -422,6 +470,7 @@ unsigned int *diff;
 		return(-1);
 	    }
 	} else {
+/* case2++; */
 	    /* normal case: not either very high or very low entropy */
 	    if (output_nbits(buffer, fs+1, fsbits) == EOF) {
                 ffpmsg("rice_encode: end of buffer");
@@ -828,7 +877,7 @@ int nbits, nzero, fs;
 unsigned char *cend, bytevalue;
 unsigned int b, diff, lastpix;
 int fsmax, fsbits, bbits;
-static int *nonzero_count = (int *)NULL;
+extern const int nonzero_count[];
 
    /*
      * Original size of each pixel (bsize, bytes) and coding block
@@ -872,26 +921,6 @@ static int *nonzero_count = (int *)NULL;
 
     bbits = 1<<fsbits;
 
-    if (nonzero_count == (int *) NULL) {
-	/*
-	 * nonzero_count is lookup table giving number of bits
-	 * in 8-bit values not including leading zeros
-	 */
-
-        /*  NOTE!!!  This memory never gets freed  */
-	nonzero_count = (int *) malloc(256*sizeof(int));
-	if (nonzero_count == (int *) NULL) {
-            ffpmsg("rdecomp: insufficient memory");
-	    return 1;
-	}
-	nzero = 8;
-	k = 128;
-	for (i=255; i>=0; ) {
-	    for ( ; i>=k; i--) nonzero_count[i] = nzero;
-	    k = k/2;
-	    nzero--;
-	}
-    }
     /*
      * Decode in blocks of nblock pixels
      */
@@ -1017,7 +1046,7 @@ int nbits, nzero, fs;
 unsigned char *cend, bytevalue;
 unsigned int b, diff, lastpix;
 int fsmax, fsbits, bbits;
-static int *nonzero_count = (int *)NULL;
+extern const int nonzero_count[];
 
    /*
      * Original size of each pixel (bsize, bytes) and coding block
@@ -1062,26 +1091,6 @@ static int *nonzero_count = (int *)NULL;
 
     bbits = 1<<fsbits;
 
-    if (nonzero_count == (int *) NULL) {
-	/*
-	 * nonzero_count is lookup table giving number of bits
-	 * in 8-bit values not including leading zeros
-	 */
-
-        /*  NOTE!!!  This memory never gets freed  */
-	nonzero_count = (int *) malloc(256*sizeof(int));
-	if (nonzero_count == (int *) NULL) {
-            ffpmsg("rdecomp: insufficient memory");
-	    return 1;
-	}
-	nzero = 8;
-	k = 128;
-	for (i=255; i>=0; ) {
-	    for ( ; i>=k; i--) nonzero_count[i] = nzero;
-	    k = k/2;
-	    nzero--;
-	}
-    }
     /*
      * Decode in blocks of nblock pixels
      */
@@ -1204,7 +1213,7 @@ int nbits, nzero, fs;
 unsigned char *cend;
 unsigned int b, diff, lastpix;
 int fsmax, fsbits, bbits;
-static int *nonzero_count = (int *)NULL;
+extern const int nonzero_count[];
 
    /*
      * Original size of each pixel (bsize, bytes) and coding block
@@ -1249,26 +1258,6 @@ static int *nonzero_count = (int *)NULL;
 
     bbits = 1<<fsbits;
 
-    if (nonzero_count == (int *) NULL) {
-	/*
-	 * nonzero_count is lookup table giving number of bits
-	 * in 8-bit values not including leading zeros
-	 */
-
-        /*  NOTE!!!  This memory never gets freed  */
-	nonzero_count = (int *) malloc(256*sizeof(int));
-	if (nonzero_count == (int *) NULL) {
-            ffpmsg("rdecomp: insufficient memory");
-	    return 1;
-	}
-	nzero = 8;
-	k = 128;
-	for (i=255; i>=0; ) {
-	    for ( ; i>=k; i--) nonzero_count[i] = nzero;
-	    k = k/2;
-	    nzero--;
-	}
-    }
     /*
      * Decode in blocks of nblock pixels
      */
