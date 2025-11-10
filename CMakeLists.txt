@@ -13,13 +13,32 @@ endif()
 # Project version
 message(STATUS "Building PEGASE-HR version ${PEGASE_VERSION}")
 
+# Option to enable/disable OpenMP
+option(USE_OPENMP "Enable OpenMP parallelization (recommended only for long calculations)" OFF)
+
 # Set Fortran compiler flags
 if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fopenmp -fallow-argument-mismatch -Wall")
+    # Enable preprocessor (-cpp) for #ifdef directives in Fortran
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch -Wall -cpp")
+    if(USE_OPENMP)
+        # -fopenmp automatically defines _OPENMP, no need for add_definitions()
+        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fopenmp")
+        message(STATUS "OpenMP: ENABLED")
+    else()
+        message(STATUS "OpenMP: DISABLED (use -DUSE_OPENMP=ON to enable)")
+    endif()
     set(CMAKE_Fortran_FLAGS_RELEASE "-O4")
     set(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -fbounds-check")
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qopenmp -warn all")
+    # Enable preprocessor (-fpp) for #ifdef directives in Fortran
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -warn all -fpp")
+    if(USE_OPENMP)
+        # -qopenmp automatically defines _OPENMP, no need for add_definitions()
+        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qopenmp")
+        message(STATUS "OpenMP: ENABLED")
+    else()
+        message(STATUS "OpenMP: DISABLED (use -DUSE_OPENMP=ON to enable)")
+    endif()
     set(CMAKE_Fortran_FLAGS_RELEASE "-O3")
     set(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -check all")
 endif()

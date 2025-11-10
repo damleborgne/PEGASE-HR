@@ -23,6 +23,9 @@ program spectra_HR
   integer, DIMENSION(8) :: vi,ve
 
   real :: ti,te ! timing
+#ifdef _OPENMP
+  integer :: num_threads, omp_get_max_threads
+#endif
 
 
   !################################################################################
@@ -30,6 +33,15 @@ program spectra_HR
   !################################################################################
 
   if (verbose.ge.2) write(*,*) 'Initialization'
+  
+  ! Display OpenMP thread count
+#ifdef _OPENMP
+  num_threads = omp_get_max_threads()
+  write(*,'(A,I0,A)') ' OpenMP: Using ', num_threads, ' thread(s)'
+#else
+  write(*,'(A)') ' OpenMP: DISABLED (compiled without OpenMP support)'
+#endif
+  
   call cpu_time(ti)
 
   !################################################################################
