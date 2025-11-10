@@ -53,4 +53,14 @@ src/peg_config.f*
 data/tests/test_tmp/*
 autom4te.cache
 
+# CMake build artifacts
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+*.cmake
+!CMakeLists.txt
+
 .DS_Store

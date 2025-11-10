@@ -364,7 +364,7 @@ CONTAINS
        galprop%nSNIatot(jimpr)=nSNIatot
        galprop%agebol(jimpr)=agebol
 
-       galprop%lines_spectra(1:galprop%nlines,jimpr)=flinetot
+       galprop%lines_spectra(1:galprop%nlines,jimpr)=flinetot(1:galprop%nlines)
        
     end do
 

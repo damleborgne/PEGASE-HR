@@ -48,15 +48,66 @@ Therefore, it will not be possible to install the compiled files...
 fi
 
 
-echo "Compiling CFITSIO"
-cd cfitsio && autoconf && ./configure && make && cd ..
+
+echo "Checking for CFITSIO library..."
+
+# Check if user wants to use system cfitsio
+AC_ARG_WITH([system-cfitsio],
+    [AS_HELP_STRING([--with-system-cfitsio],
+        [use system-installed cfitsio instead of bundled version])],
+    [use_system_cfitsio=$withval],
+    [use_system_cfitsio=no])
+
+if test "x$use_system_cfitsio" = "xyes"; then
+    echo "Using system-installed CFITSIO"
+    # Try pkg-config first
+    PKG_CHECK_MODULES([CFITSIO], [cfitsio], [
+        libs="$LIBS $CFITSIO_LIBS"
+        LIBS="$LIBS $CFITSIO_LIBS"
+        cppflags="$CPPFLAGS $CFITSIO_CFLAGS"
+        CPPFLAGS="$CPPFLAGS $CFITSIO_CFLAGS"
+    ], [
+        # Fallback to manual detection
+        AC_CHECK_LIB([cfitsio], [ffopen], [
+            libs="$LIBS -lcfitsio -lm"
+            LIBS="$LIBS -lcfitsio -lm"
+        ], [
+            AC_MSG_ERROR([
+*******************************************************************
+System CFITSIO library not found.
+Please install it using your package manager:
+  macOS: brew install cfitsio
+  Ubuntu/Debian: sudo apt-get install libcfitsio-dev
+  CentOS/RHEL: sudo yum install cfitsio-devel
+Or compile without --with-system-cfitsio to use bundled version.
+*******************************************************************
+            ])
+        ])
+    ])
+else
+    echo "Using bundled CFITSIO (compiling from cfitsio/ subdirectory)"
+    if test -d cfitsio; then
+        cd cfitsio && autoconf && ./configure && make && cd ..
+    else
+        AC_MSG_ERROR([
+*******************************************************************
+cfitsio directory not found.
+Either:
+1) Provide cfitsio sources in cfitsio/ subdirectory, or
+2) Use --with-system-cfitsio to use system-installed cfitsio
+*******************************************************************
+        ])
+    fi
+    libs="$LIBS -L../cfitsio -lcfitsio -lm"
+    LIBS="$LIBS -Lcfitsio -lcfitsio -lm"
+fi
 
 AC_SEARCH_LIBS(fabs, m)
 
+
 #libs="$LIBS -L../cfitsio -lcfitsio -lm -fopenmp"
 #LIBS="$LIBS -Lcfitsio -lcfitsio -lm -fopenmp"
-libs="$LIBS -L../cfitsio -lcfitsio -lm"
-LIBS="$LIBS -Lcfitsio -lcfitsio -lm"
+# Note: CFITSIO linking is now handled above based on --with-system-cfitsio option
 
 AC_CHECK_LIB(cfitsio,ffukye, [], [
         echo "cfitsio not found. You have two options :"
