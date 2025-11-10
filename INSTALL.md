@@ -3,6 +3,55 @@
 PEGASE-HR is a high-resolution spectral synthesis code written in Fortran 90.
 This guide describes the modern installation procedure using CMake.
 
+## ⚠️ IMPORTANT: Large Data Files (Git LFS)
+
+**CRITICAL**: The stellar library files (`data/stellibs/*.fits`) are stored using Git LFS (Large File Storage). 
+
+After cloning the repository, these files will appear as small text files (~134 bytes) instead of the actual large FITS files (~20 MB). **The programs will fail with an error like:**
+
+```
+Failed opening file /path/to/PEGASE-HR/data/stellibs/stellibLCBcor.fits
+```
+
+### To download the actual data files:
+
+**Option 1: Using Git LFS (recommended)**
+```bash
+# Install Git LFS (requires root access)
+sudo apt-get install git-lfs  # Ubuntu/Debian
+# or
+brew install git-lfs          # macOS
+
+# Then fetch the large files
+cd /path/to/PEGASE-HR
+git lfs install
+git lfs pull
+```
+
+**Option 2: Manual download (no root required)**
+
+Download the files directly from GitHub:
+```bash
+cd /path/to/PEGASE-HR/data/stellibs
+
+# Download stellibLCBcor.fits
+wget https://media.githubusercontent.com/media/damleborgne/PEGASE-HR/master/data/stellibs/stellibLCBcor.fits -O stellibLCBcor.fits
+
+# Download stellibELODIE_3.0.fits
+wget https://media.githubusercontent.com/media/damleborgne/PEGASE-HR/master/data/stellibs/stellibELODIE_3.0.fits -O stellibELODIE_3.0.fits
+
+# Download stellibELODIE_3.1.fits
+wget https://media.githubusercontent.com/media/damleborgne/PEGASE-HR/master/data/stellibs/stellibELODIE_3.1.fits -O stellibELODIE_3.1.fits
+```
+
+**Verify the files are correctly downloaded:**
+```bash
+ls -lh data/stellibs/*.fits
+# Should show files of ~20 MB, NOT 134 bytes
+```
+
+---
+
 ## Requirements
 
 ### System Requirements
@@ -122,6 +171,14 @@ Alternatively, if you installed to the default location (`/usr/local/bin`), the 
 
 ## Testing the Installation
 
+**BEFORE RUNNING TESTS**: Make sure you have downloaded the large data files (see the warning at the top of this document)!
+
+Verify the stellar library files are correctly downloaded:
+```bash
+ls -lh data/stellibs/*.fits
+# Should show files of ~20 MB each, NOT 134 bytes
+```
+
 Run the test suite:
 
 ```bash
@@ -150,15 +207,61 @@ After installation, the following executables are available:
 
 ## Troubleshooting
 
-### CFITSIO not found
-If CMake cannot find CFITSIO, make sure it's installed and try:
-```bash
-# Find where CFITSIO is installed
-brew --prefix cfitsio  # macOS with Homebrew
-pkg-config --libs cfitsio  # Linux
+### "Failed opening file" error for stellib*.fits files
 
-# Then specify the path:
-cmake -DCFITSIO_ROOT=/path/to/cfitsio ..
+**Symptom**: The program crashes with:
+```
+Failed opening file /path/to/PEGASE-HR/data/stellibs/stellibLCBcor.fits
+```
+
+**Cause**: The stellar library files were not properly downloaded. If you see files of ~134 bytes in `data/stellibs/`, these are Git LFS pointers, not the actual data files.
+
+**Solution**: See the [Large Data Files section](#️-important-large-data-files-git-lfs) at the top of this document for instructions to download the actual files using Git LFS or wget.
+
+### CFITSIO not found
+
+If CMake cannot find CFITSIO, you have two options:
+
+#### Option 1: System-wide installation (requires root)
+```bash
+# Ubuntu/Debian
+sudo apt-get install libcfitsio-dev pkg-config
+
+# macOS with Homebrew
+brew install cfitsio
+```
+
+#### Option 2: Local installation (no root required)
+
+If you don't have root access, install CFITSIO locally:
+
+```bash
+# Download and extract CFITSIO
+cd ~
+wget https://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio-4.6.3.tar.gz
+tar -xzf cfitsio-4.6.3.tar.gz
+cd cfitsio-4.6.3
+
+# Configure, compile, and install to ~/local
+./configure --prefix=$HOME/local
+make
+make install
+
+# Add to your shell configuration (~/.bashrc or ~/.tcshrc)
+# For bash:
+export LD_LIBRARY_PATH=$HOME/local/lib:$LD_LIBRARY_PATH
+export PKG_CONFIG_PATH=$HOME/local/lib/pkgconfig:$PKG_CONFIG_PATH
+
+# For tcsh:
+setenv LD_LIBRARY_PATH $HOME/local/lib
+setenv PKG_CONFIG_PATH $HOME/local/lib/pkgconfig
+
+# Reload your shell configuration
+source ~/.bashrc  # or source ~/.tcshrc
+
+# Then configure PEGASE-HR
+cd /path/to/PEGASE-HR/build
+cmake ..
 ```
 
 ### Memory Issues (Segmentation Fault)
