@@ -325,6 +325,11 @@ CONTAINS
     real    :: HeI,HeII,alphaTe,gline
     integer     :: i,j
 
+    ! Initialize variables to avoid uninitialized warnings
+    g1 = 0.0
+    g2 = 0.0
+    g3 = 0.0
+    g4 = 0.0
 
     call file_open(trim(PEG_ROOT)//'/data/external/HII.dat',lun,istat)
     if(istat.ne.0) return

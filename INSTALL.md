@@ -219,7 +219,16 @@ cmake -DCMAKE_Fortran_FLAGS="-O3 -march=native" ..
 
 ### Parallel Builds
 
-Speed up compilation using multiple cores:
+**⚠️ WARNING**: Fortran module dependencies can cause race conditions with parallel builds.
+If you encounter errors like `Cannot delete temporary module file`, use sequential build (`-j1`).
+
+Sequential build (recommended, safe):
+```bash
+cmake --build .
+# Or: make
+```
+
+Parallel build (faster but may fail):
 ```bash
 # CMake 3.12 and later
 cmake --build . --parallel 4

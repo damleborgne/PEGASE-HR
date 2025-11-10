@@ -232,7 +232,7 @@ CONTAINS
     real(DP) :: dsigmaZ, dsigmagas
     real, dimension(nmaxtimes) :: SFRalphak, SFR1malphak
 
-    real :: ti1,ti2,te1,te2
+    ! Removed unused variables: ti1, ti2, te1, te2
 
     !     Requirements : compute sigmagas and SFR at all timesteps because they are interdependent,
     !     as well as ZSFR and Zgas because they are used to compute lum weighted Zstars later.
@@ -701,9 +701,8 @@ CONTAINS
     real,dimension(:,:) :: flux_gal
 
     !Local
-    integer :: i
-    integer :: ilambda, itimeimpr, ispec
-    integer  :: istat
+    integer :: i, itimeimpr, ispec
+    ! Removed unused variables: ilambda, istat
 
     real,dimension(stellibinfo%nlambda,ntotused)   :: used_spectra
 

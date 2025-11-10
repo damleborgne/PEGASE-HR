@@ -701,11 +701,11 @@ CONTAINS
     integer,intent(out)  :: nlines
     integer :: nlines_read
     real(dp),DIMENSION(:), INTENT(out) ::  lambdaline
-    integer istat,a
+    integer istat  ! Removed unused: a
     character(len=240) :: comment
     character(len=10) :: keyword
 
-    real,DIMENSION(nmaxlines) ::  lambdaline_real
+    ! Removed unused: lambdaline_real
 
     integer :: ncol
     logical :: anynulls
@@ -765,7 +765,7 @@ CONTAINS
  
     integer istat
 
-    integer ncol,ncoltrue
+    integer ncol  ! Removed unused: ncoltrue
     logical anynulls
     integer k
 

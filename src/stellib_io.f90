@@ -193,7 +193,7 @@ CONTAINS
 
     implicit none
 
-    integer       istat, i
+    integer       istat  ! Removed unused: i
 
     logical       anynulls
 
@@ -412,7 +412,7 @@ CONTAINS
   subroutine read_CM()
     implicit none
     
-    integer :: LunCM, nCM, i,k, istat
+    integer :: LunCM, i, k, istat  ! Removed unused: nCM
     character(len=72) :: a
 
     call file_open(trim(PEG_ROOT)//'/data/external/stellibCM.dat',&

@@ -19,7 +19,8 @@ option(USE_OPENMP "Enable OpenMP parallelization (recommended only for long calc
 # Set Fortran compiler flags
 if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
     # Enable preprocessor (-cpp) for #ifdef directives in Fortran
-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch -Wall -cpp")
+    # Disable informational warnings: conversion, surprising (stack arrays), character truncation
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch -Wall -cpp -Wno-conversion -Wno-surprising -Wno-character-truncation")
     if(USE_OPENMP)
         # -fopenmp automatically defines _OPENMP, no need for add_definitions()
         set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fopenmp")
